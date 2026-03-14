@@ -1,5 +1,6 @@
 ﻿import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { Droplets, Trees, Flame, Wind, Trash2, Leaf, Search } from 'lucide-react';
 
 const statusClass = {
   'En revisión': 'bg-yellow-500/15 text-yellow-400 border border-yellow-500/30',
@@ -14,11 +15,11 @@ const severityClass = {
 };
 
 const typeIcons = {
-  'Contaminación de agua': '💧',
-  'Tala ilegal':           '🌳',
-  'Quema de residuos':     '🔥',
-  'Contaminación del aire': '💨',
-  'Residuos sólidos':      '🗑️',
+  'Contaminación de agua':  Droplets,
+  'Tala ilegal':            Trees,
+  'Quema de residuos':      Flame,
+  'Contaminación del aire': Wind,
+  'Residuos sólidos':       Trash2,
 };
 
 const TYPES    = ['Todos', ...Object.keys(typeIcons)];
@@ -87,7 +88,9 @@ export default function Reports() {
       {/* Empty state — sin datos aún */}
       {noData && (
         <div className="card text-center py-20 text-gray-500">
-          <div className="text-5xl mb-4">🌿</div>
+          <div className="w-16 h-16 rounded-2xl bg-green-500/10 flex items-center justify-center mx-auto mb-4">
+            <Leaf className="w-8 h-8 text-green-500" />
+          </div>
           <p className="font-semibold text-gray-300 text-lg">Aún no hay reportes</p>
           <p className="text-sm mt-2 text-gray-500">Sé el primero en reportar un problema ambiental en tu zona.</p>
           <Link to="/reports/new" className="btn-primary inline-block mt-6">
@@ -99,7 +102,9 @@ export default function Reports() {
       {/* Sin resultados tras filtrar */}
       {noResults && (
         <div className="card text-center py-16 text-gray-500">
-          <div className="text-4xl mb-3">🔍</div>
+          <div className="w-14 h-14 rounded-2xl bg-gray-800 flex items-center justify-center mx-auto mb-3">
+            <Search className="w-6 h-6 text-gray-500" />
+          </div>
           <p className="font-medium">No se encontraron reportes con esos filtros.</p>
           <button
             onClick={() => { setSearch(''); setTypeFilter('Todos'); setStatusFilter('Todos'); }}

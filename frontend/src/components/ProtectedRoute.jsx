@@ -1,5 +1,6 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { Loader2 } from 'lucide-react';
 
 export default function ProtectedRoute() {
   const { user, loading } = useAuth();
@@ -9,7 +10,7 @@ export default function ProtectedRoute() {
     return (
       <div className="min-h-screen bg-gray-950 flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
-          <span className="text-3xl">🌿</span>
+          <Loader2 className="w-8 h-8 text-green-500 animate-spin" />
           <p className="text-gray-400 text-sm">Cargando...</p>
         </div>
       </div>

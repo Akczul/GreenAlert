@@ -1,33 +1,34 @@
 import { Link } from 'react-router-dom';
+import { MapPin, Camera, Users, CheckCircle2, BarChart2, Bell } from 'lucide-react';
 
 const features = [
   {
-    icon: '📍',
+    Icon: MapPin,
     title: 'Geolocalización',
     desc: 'Ubica y mapea problemáticas ambientales con precisión geográfica en tu territorio.',
   },
   {
-    icon: '📷',
+    Icon: Camera,
     title: 'Evidencia Multimedia',
     desc: 'Adjunta fotos, videos o documentos a cada reporte para respaldarlo con pruebas.',
   },
   {
-    icon: '👥',
+    Icon: Users,
     title: 'Participación Colectiva',
     desc: 'La comunidad puede reportar, apoyar y comentar incidencias ambientales.',
   },
   {
-    icon: '✅',
+    Icon: CheckCircle2,
     title: 'Validación de Reportes',
     desc: 'Sistema de gestión para verificar y dar seguimiento institucional a cada caso.',
   },
   {
-    icon: '📊',
+    Icon: BarChart2,
     title: 'Visualización',
     desc: 'Mapa interactivo e indicadores del estado ambiental de tu región.',
   },
   {
-    icon: '🔔',
+    Icon: Bell,
     title: 'Alertas Tempranas',
     desc: 'Recibe notificaciones cuando surjan problemas ambientales cerca de tu zona.',
   },
@@ -52,7 +53,8 @@ export default function Home() {
 
         <div className="max-w-3xl mx-auto">
           <span className="badge bg-green-500/10 text-green-400 border border-green-500/30 mb-6">
-            🌿 Plataforma de monitoreo ambiental ciudadano
+            <img src="/chrome-192x192.png" alt="" className="h-5 w-5 object-contain" />
+            Plataforma de monitoreo ambiental ciudadano
           </span>
 
           <h1 className="mt-4 text-5xl sm:text-6xl font-extrabold tracking-tight text-white leading-tight">
@@ -99,7 +101,9 @@ export default function Home() {
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {features.map((f) => (
               <div key={f.title} className="card hover:border-green-800 transition-colors duration-200 group">
-                <div className="text-3xl mb-3">{f.icon}</div>
+                <div className="w-10 h-10 rounded-lg bg-green-500/10 flex items-center justify-center mb-4">
+                  <f.Icon className="w-5 h-5 text-green-400" />
+                </div>
                 <h3 className="font-semibold text-white group-hover:text-green-400 transition-colors">{f.title}</h3>
                 <p className="mt-2 text-sm text-gray-400 leading-relaxed">{f.desc}</p>
               </div>

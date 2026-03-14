@@ -30,8 +30,8 @@ export function AuthProvider({ children }) {
     return userData;
   };
 
-  const register = async (nombre, email, password) => {
-    const res = await registerUser(nombre, email, password);
+  const register = async (nombre, apellido, email, password, telefono) => {
+    const res = await registerUser(nombre, apellido, email, password, telefono);
     const { token, user: userData } = res.data.data;
     localStorage.setItem('ga_token', token);
     localStorage.setItem('ga_user', JSON.stringify(userData));

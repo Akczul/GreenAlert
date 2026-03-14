@@ -33,9 +33,9 @@ export default function Navbar() {
     <header className="sticky top-0 z-50 bg-gray-950/90 backdrop-blur border-b border-gray-800">
       <nav className="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-2 shrink-0">
-          <span className="text-green-500 text-xl">🌿</span>
-          <span className="font-bold text-white tracking-tight">
+        <Link to="/" className="flex items-center shrink-0">
+          <img src="/chrome-192x192.png" alt="GreenAlert" className="h-9 w-9 object-contain" />
+          <span className="ml-2 font-bold text-white tracking-tight hidden sm:inline">
             Green<span className="text-green-400">Alert</span>
           </span>
         </Link>
@@ -67,7 +67,7 @@ export default function Navbar() {
                     {user.nombre?.charAt(0).toUpperCase()}
                   </span>
                   <div className="text-left leading-tight hidden lg:block">
-                    <p className="text-xs font-medium text-gray-200 max-w-[110px] truncate">{user.nombre}</p>
+                    <p className="text-xs font-medium text-gray-200 max-w-[110px] truncate">{`${user.nombre} ${user.apellido || ''}`.trim()}</p>
                     <p className={`text-[10px] ${rolColor[user.rol] ?? 'text-gray-400'}`}>{rolLabel[user.rol] ?? user.rol}</p>
                   </div>
                   <svg className="w-3.5 h-3.5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -78,7 +78,7 @@ export default function Navbar() {
                 {userMenuOpen && (
                   <div className="absolute right-0 mt-2 w-52 bg-gray-900 border border-gray-700 rounded-xl shadow-xl py-1 z-50">
                     <div className="px-4 py-2.5 border-b border-gray-800">
-                      <p className="text-sm font-medium text-gray-100 truncate">{user.nombre}</p>
+                      <p className="text-sm font-medium text-gray-100 truncate">{`${user.nombre} ${user.apellido || ''}`.trim()}</p>
                       <p className="text-xs text-gray-500 truncate">{user.email}</p>
                     </div>
                     <button
