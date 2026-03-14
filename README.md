@@ -49,6 +49,7 @@ src/
 ├── app.js
 └── server.js
 ```
+---
 
 ## Avance No.3
 Se crearon 3 archivos en models, uno por cada tabla de la base de datos. Cada archivo es simplemente un objeto con funciones que ejecutan queries SQL:
@@ -77,3 +78,70 @@ evidencia.model.js — Maneja la tabla evidencias
 - Eliminar una evidencia
 
 La idea es que los controllers (que vienen después) usen estos modelos en lugar de escribir SQL directamente. Así el código queda ordenado y cada archivo tiene una sola responsabilidad.
+
+---
+
+## Flujo de registro (`POST /auth/register`)
+
+Se implemento el endpoint de registro para conectar el formulario del frontend con el backend.
+
+Ruta:
+
+`POST /auth/register`
+
+Body esperado:
+
+```json
+{
+	"nombre": "Juan Diego",
+	"email": "juan@example.com",
+	"password": "miPassword123"
+}
+```
+
+Validaciones en backend:
+
+- `nombre` obligatorio, minimo 2 caracteres.
+- `email` obligatorio y con formato valido.
+- `password` obligatorio, minimo 8 caracteres.
+- `email` unico (si ya existe, responde conflicto).
+
+Proceso interno:
+
+1. Valida los datos de entrada.
+2. Verifica si ya existe el correo en `usuarios`.
+3. Hashea la contrasena con `crypto.scrypt`.
+4. Crea el usuario con rol `ciudadano`.
+5. Genera JWT.
+6. Devuelve respuesta estandar usando `successResponse` de `src/utils/response.js`.
+
+Respuesta exitosa (201):
+
+```json
+{
+	"status": "success",
+	"message": "Cuenta creada correctamente.",
+	"data": {
+		"token": "<jwt>",
+		"user": {
+			"id_usuario": 1,
+			"uuid": "...",
+			"nombre": "Juan Diego",
+			"apellido": "",
+			"email": "juan@example.com",
+			"rol": "ciudadano",
+			"activo": 1,
+			"email_verificado": 0,
+			"avatar_url": null,
+			"telefono": null,
+			"created_at": "2026-03-13T..."
+		}
+	}
+}
+```
+
+Errores comunes:
+
+- `400`: datos invalidos.
+- `409`: correo ya registrado.
+- `500`: error interno o falta `JWT_SECRET` en entorno.
