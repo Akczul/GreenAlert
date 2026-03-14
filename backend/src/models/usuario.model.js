@@ -51,11 +51,11 @@ export const UsuarioModel = {
   
    //Crea un nuevo usuario.
    
-  create: async ({ nombre, apellido, email, password_hash, rol = 'ciudadano' }) => {
+  create: async ({ nombre, apellido, email, password_hash, rol = 'ciudadano', telefono = null }) => {
     const [result] = await pool.execute(
-      `INSERT INTO usuarios (nombre, apellido, email, password_hash, rol)
-       VALUES (?, ?, ?, ?, ?)`,
-      [nombre, apellido, email, password_hash, rol]
+      `INSERT INTO usuarios (nombre, apellido, email, password_hash, rol, telefono)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [nombre, apellido, email, password_hash, rol, telefono]
     );
     return result.insertId;
   },
