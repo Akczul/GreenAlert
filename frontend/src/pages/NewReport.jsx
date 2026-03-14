@@ -1,5 +1,6 @@
 import { useState, lazy, Suspense } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { CheckCircle2, Paperclip } from 'lucide-react';
 
 const LocationPicker = lazy(() => import('../components/LocationPicker'));
 
@@ -21,21 +22,24 @@ export default function NewReport() {
   const [step, setStep] = useState(0);
   const [submitted, setSubmitted] = useState(false);
   const [form, setForm] = useState({
-    type: '',
-    severity: '',
-    title: '',
-    description: '',
-    location: '',
-    coords: '',
+    tipo_contaminacion: '',
+    nivel_severidad: '',
+    titulo: '',
+    descripcion: '',
+    direccion: '',
+    municipio: '',
+    departamento: '',
+    latitud: '',
+    longitud: '',
     file: null,
   });
 
   const set = (key, value) => setForm((p) => ({ ...p, [key]: value }));
 
   const canNext = () => {
-    if (step === 0) return form.type && form.severity;
-    if (step === 1) return form.title.length >= 5 && form.description.length >= 10;
-    if (step === 2) return form.location.length >= 3;
+    if (step === 0) return form.tipo_contaminacion && form.nivel_severidad;
+    if (step === 1) return form.titulo.length >= 5 && form.descripcion.length >= 10;
+    if (step === 2) return form.direccion.length >= 3;
     return true;
   };
 
@@ -48,7 +52,9 @@ export default function NewReport() {
   if (submitted) {
     return (
       <div className="max-w-lg mx-auto px-4 py-24 text-center">
-        <div className="text-6xl mb-6">🌿</div>
+        <div className="w-20 h-20 rounded-full bg-green-500/15 flex items-center justify-center mx-auto mb-6">
+          <CheckCircle2 className="w-10 h-10 text-green-400" />
+        </div>
         <h2 className="text-2xl font-bold text-white">¡Reporte enviado!</h2>
         <p className="text-gray-400 mt-3 leading-relaxed">
           Tu reporte ha sido registrado y será revisado por el equipo de moderación.
@@ -102,9 +108,9 @@ export default function NewReport() {
                   <button
                     type="button"
                     key={t}
-                    onClick={() => set('type', t)}
+                    onClick={() => set('tipo_contaminacion', t)}
                     className={`text-sm text-left px-4 py-3 rounded-lg border transition-colors ${
-                      form.type === t
+                      form.tipo_contaminacion === t
                         ? 'border-green-500 bg-green-500/10 text-green-300'
                         : 'border-gray-700 bg-gray-800/50 text-gray-300 hover:border-gray-600'
                     }`}
@@ -121,9 +127,9 @@ export default function NewReport() {
                     <button
                       type="button"
                       key={s}
-                      onClick={() => set('severity', s)}
+                      onClick={() => set('nivel_severidad', s)}
                       className={`flex-1 py-2 text-sm rounded-lg border transition-colors ${
-                        form.severity === s
+                        form.nivel_severidad === s
                           ? s === 'Alta' ? 'border-red-500 bg-red-500/10 text-red-400'
                           : s === 'Media' ? 'border-orange-500 bg-orange-500/10 text-orange-400'
                           : 'border-gray-400 bg-gray-500/10 text-gray-300'
@@ -148,11 +154,11 @@ export default function NewReport() {
                   type="text"
                   placeholder="Ej: Vertimiento de aceite en el río"
                   className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:border-green-500 transition-colors"
-                  value={form.title}
-                  onChange={(e) => set('title', e.target.value)}
+                  value={form.titulo}
+                  onChange={(e) => set('titulo', e.target.value)}
                   maxLength={80}
                 />
-                <span className="text-xs text-gray-600 mt-1 block">{form.title.length}/80</span>
+                <span className="text-xs text-gray-600 mt-1 block">{form.titulo.length}/80</span>
               </div>
               <div>
                 <label className="text-sm text-gray-400 mb-1.5 block">Descripción detallada *</label>
@@ -160,8 +166,8 @@ export default function NewReport() {
                   rows={4}
                   placeholder="Describe qué está pasando, desde cuándo, y cualquier detalle relevante..."
                   className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:border-green-500 transition-colors resize-none"
-                  value={form.description}
-                  onChange={(e) => set('description', e.target.value)}
+                  value={form.descripcion}
+                  onChange={(e) => set('descripcion', e.target.value)}
                 />
               </div>
             </div>
@@ -177,26 +183,60 @@ export default function NewReport() {
                   type="text"
                   placeholder="Ej: Río Bogotá, cerca al puente de La Virgen"
                   className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:border-green-500 transition-colors"
-                  value={form.location}
-                  onChange={(e) => set('location', e.target.value)}
+                  value={form.direccion}
+                  onChange={(e) => set('direccion', e.target.value)}
                 />
               </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm text-gray-400 mb-1.5 block">Municipio *</label>
+                  <input
+                    type="text"
+                    placeholder="Ej: Bogotá"
+                    className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:border-green-500 transition-colors"
+                    value={form.municipio}
+                    onChange={(e) => set('municipio', e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="text-sm text-gray-400 mb-1.5 block">Departamento *</label>
+                  <input
+                    type="text"
+                    placeholder="Ej: Cundinamarca"
+                    className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:border-green-500 transition-colors"
+                    value={form.departamento}
+                    onChange={(e) => set('departamento', e.target.value)}
+                  />
+                </div>
+              </div>
               <div>
-                <label className="text-sm text-gray-400 mb-1.5 block">Coordenadas GPS (opcional)</label>
-                <input
-                  type="text"
-                  placeholder="Ej: 4.7110, -74.0721"
-                  className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:border-green-500 transition-colors"
-                  value={form.coords}
-                  onChange={(e) => set('coords', e.target.value)}
-                />
+                <label className="text-sm text-gray-400 mb-1.5 block">Coordenadas GPS (opcional — usa el mapa o ingresa manualmente)</label>
+                <div className="grid grid-cols-2 gap-3">
+                  <input
+                    type="number"
+                    step="any"
+                    placeholder="Latitud. Ej: 4.7110"
+                    className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:border-green-500 transition-colors"
+                    value={form.latitud}
+                    onChange={(e) => set('latitud', e.target.value)}
+                  />
+                  <input
+                    type="number"
+                    step="any"
+                    placeholder="Longitud. Ej: -74.0721"
+                    className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:border-green-500 transition-colors"
+                    value={form.longitud}
+                    onChange={(e) => set('longitud', e.target.value)}
+                  />
+                </div>
               </div>
               <Suspense fallback={
                 <div className="h-44 rounded-lg bg-gray-800/50 border border-gray-700 flex items-center justify-center text-gray-500 text-sm">Cargando mapa...</div>
               }>
                 <LocationPicker
-                  coords={form.coords}
-                  onChange={(val) => set('coords', val)}
+                  latitud={form.latitud}
+                  longitud={form.longitud}
+                  onChange={(lat, lng) => { set('latitud', lat); set('longitud', lng); }}
                 />
               </Suspense>
             </div>
@@ -209,24 +249,28 @@ export default function NewReport() {
               <p className="text-sm text-gray-400">Sube fotos, videos o documentos que respalden el reporte (opcional).</p>
               <label className="border-2 border-dashed border-gray-700 hover:border-green-600 rounded-xl p-8 text-center cursor-pointer transition-colors group block">
                 <input type="file" className="hidden" accept="image/*,video/*,.pdf" onChange={(e) => set('file', e.target.files[0])} />
-                <div className="text-3xl mb-2">📎</div>
-                {form.file ? (
-                  <p className="text-sm text-green-400 font-medium">{form.file.name}</p>
-                ) : (
-                  <>
-                    <p className="text-sm text-gray-400 group-hover:text-gray-300">Haz clic para seleccionar archivo</p>
-                    <p className="text-xs text-gray-600 mt-1">JPG, PNG, MP4, PDF — máx. 50MB</p>
-                  </>
-                )}
+                <div className="flex flex-col items-center">
+                  <Paperclip className="w-8 h-8 text-gray-500 group-hover:text-green-400 transition-colors mb-2" />
+                  {form.file ? (
+                    <p className="text-sm text-green-400 font-medium">{form.file.name}</p>
+                  ) : (
+                    <>
+                      <p className="text-sm text-gray-400 group-hover:text-gray-300">Haz clic para seleccionar archivo</p>
+                      <p className="text-xs text-gray-600 mt-1">JPG, PNG, MP4, PDF — máx. 50MB</p>
+                    </>
+                  )}
+                </div>
               </label>
 
               {/* Summary */}
               <div className="bg-gray-800/50 rounded-xl p-4 border border-gray-700 text-sm space-y-2">
                 <p className="font-medium text-gray-300 mb-3">Resumen del reporte</p>
-                <div className="flex justify-between text-gray-400"><span>Tipo</span><span className="text-white">{form.type}</span></div>
-                <div className="flex justify-between text-gray-400"><span>Severidad</span><span className="text-white">{form.severity}</span></div>
-                <div className="flex justify-between text-gray-400"><span>Título</span><span className="text-white truncate max-w-[60%] text-right">{form.title}</span></div>
-                <div className="flex justify-between text-gray-400"><span>Ubicación</span><span className="text-white truncate max-w-[60%] text-right">{form.location}</span></div>
+                <div className="flex justify-between text-gray-400"><span>Tipo</span><span className="text-white">{form.tipo_contaminacion}</span></div>
+                <div className="flex justify-between text-gray-400"><span>Severidad</span><span className="text-white">{form.nivel_severidad}</span></div>
+                <div className="flex justify-between text-gray-400"><span>Título</span><span className="text-white truncate max-w-[60%] text-right">{form.titulo}</span></div>
+                <div className="flex justify-between text-gray-400"><span>Municipio</span><span className="text-white">{form.municipio}</span></div>
+                <div className="flex justify-between text-gray-400"><span>Departamento</span><span className="text-white">{form.departamento}</span></div>
+                <div className="flex justify-between text-gray-400"><span>Dirección</span><span className="text-white truncate max-w-[60%] text-right">{form.direccion}</span></div>
               </div>
             </div>
           )}

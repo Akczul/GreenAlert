@@ -57,7 +57,7 @@ export default function ReportsMap({ reports = [] }) {
             <div className="text-sm">
               <p className="font-semibold text-gray-900">{r.title}</p>
               <p className="text-gray-500 mt-0.5">{r.type}</p>
-              <p className="text-gray-400 text-xs mt-1">📍 {r.location}</p>
+              <p className="text-gray-400 text-xs mt-1">{r.location}</p>
               <span
                 style={{
                   display: 'inline-block',

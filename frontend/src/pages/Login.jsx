@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { MapPin, Users, BarChart2, Bell, AlertTriangle } from 'lucide-react';
 
 const features = [
-  { icon: '📍', text: 'Geolocalización precisa' },
-  { icon: '👥', text: 'Participación colectiva' },
-  { icon: '📊', text: 'Visualización en mapa' },
-  { icon: '🔔', text: 'Alertas tempranas' },
+  { Icon: MapPin,   text: 'Geolocalización precisa' },
+  { Icon: Users,    text: 'Participación colectiva' },
+  { Icon: BarChart2, text: 'Visualización en mapa' },
+  { Icon: Bell,     text: 'Alertas tempranas' },
 ];
 
 export default function Login() {
@@ -47,17 +48,14 @@ export default function Login() {
         </div>
 
         <div className="relative z-10 text-center max-w-sm">
-          <div className="text-7xl mb-6 drop-shadow-lg">🌿</div>
-          <h1 className="text-4xl font-bold text-white mb-3">
-            Green<span className="text-green-400">Alert</span>
-          </h1>
+          <img src="/chrome-512x512.png" alt="GreenAlert" className="w-48 mx-auto mb-6 drop-shadow-2xl" />
           <p className="text-gray-400 text-base leading-relaxed mb-10">
             Plataforma ciudadana para el monitoreo y reporte de problemáticas ambientales en tu territorio.
           </p>
           <div className="grid grid-cols-2 gap-3 text-left">
-            {features.map(({ icon, text }) => (
+            {features.map(({ Icon, text }) => (
               <div key={text} className="flex items-center gap-2 bg-gray-800/60 rounded-lg px-3 py-2.5">
-                <span className="text-lg">{icon}</span>
+                <Icon className="w-4 h-4 text-green-400 shrink-0" />
                 <span className="text-gray-300 text-sm">{text}</span>
               </div>
             ))}
@@ -70,12 +68,9 @@ export default function Login() {
         <div className="w-full max-w-md">
 
           {/* Logo visible solo en mobile/tablet */}
-          <div className="lg:hidden text-center mb-8">
-            <Link to="/" className="inline-flex items-center gap-2">
-              <span className="text-green-500 text-2xl">🌿</span>
-              <span className="font-bold text-2xl text-white">
-                Green<span className="text-green-400">Alert</span>
-              </span>
+          <div className="lg:hidden flex justify-center mb-8">
+            <Link to="/">
+              <img src="/chrome-512x512.png" alt="GreenAlert" className="h-20 w-auto object-contain" />
             </Link>
           </div>
 
@@ -87,7 +82,7 @@ export default function Login() {
 
             {error && (
               <div className="mb-5 flex items-start gap-2.5 px-4 py-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm">
-                <span className="mt-0.5 shrink-0">⚠️</span>
+                <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
                 <span>{error}</span>
               </div>
             )}

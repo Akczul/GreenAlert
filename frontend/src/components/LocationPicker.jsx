@@ -26,17 +26,17 @@ function ClickHandler({ onPick }) {
   return null;
 }
 
-export default function LocationPicker({ coords, onChange }) {
+export default function LocationPicker({ latitud, longitud, onChange }) {
   const [position, setPosition] = useState(() => {
-    if (!coords) return null;
-    const [lat, lng] = coords.split(',').map(Number);
-    return isNaN(lat) || isNaN(lng) ? null : { lat, lng };
+    const lat = parseFloat(latitud);
+    const lng = parseFloat(longitud);
+    return !isNaN(lat) && !isNaN(lng) ? { lat, lng } : null;
   });
 
   const handlePick = useCallback(
     (latlng) => {
       setPosition(latlng);
-      onChange(`${latlng.lat.toFixed(6)}, ${latlng.lng.toFixed(6)}`);
+      onChange(latlng.lat, latlng.lng);
     },
     [onChange]
   );
@@ -45,7 +45,7 @@ export default function LocationPicker({ coords, onChange }) {
     <div className="flex flex-col gap-2">
       <p className="text-xs text-gray-500">
         {position
-          ? `📍 Seleccionado: ${position.lat.toFixed(5)}, ${position.lng.toFixed(5)}`
+          ? `Seleccionado: ${position.lat.toFixed(5)}, ${position.lng.toFixed(5)}`
           : 'Haz clic en el mapa para fijar la ubicación exacta'}
       </p>
       <div style={{ height: '220px', borderRadius: '0.75rem', overflow: 'hidden' }}>

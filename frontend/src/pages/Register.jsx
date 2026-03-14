@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { CheckCircle2, Lock, Smartphone, AlertTriangle } from 'lucide-react';
 
 export default function Register() {
   const { register } = useAuth();
@@ -8,9 +9,11 @@ export default function Register() {
 
   const [form, setForm] = useState({
     nombre: '',
+    apellido: '',
     email: '',
     password: '',
     confirmar: '',
+    telefono: '',
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -20,6 +23,7 @@ export default function Register() {
 
   const validate = () => {
     if (form.nombre.trim().length < 2) return 'El nombre debe tener al menos 2 caracteres.';
+    if (form.apellido.trim().length < 2) return 'El apellido debe tener al menos 2 caracteres.';
     if (form.password.length < 8) return 'La contraseña debe tener al menos 8 caracteres.';
     if (form.password !== form.confirmar) return 'Las contraseñas no coinciden.';
     return null;
@@ -32,7 +36,7 @@ export default function Register() {
     if (validationError) { setError(validationError); return; }
     setLoading(true);
     try {
-      await register(form.nombre.trim(), form.email, form.password);
+      await register(form.nombre.trim(), form.apellido.trim(), form.email, form.password, form.telefono.trim() || undefined);
       navigate('/dashboard', { replace: true });
     } catch (err) {
       setError(err.response?.data?.message || 'No se pudo crear la cuenta. Intenta de nuevo.');
@@ -61,21 +65,18 @@ export default function Register() {
           <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-green-500/10 rounded-full blur-3xl" />
         </div>
         <div className="relative z-10 text-center max-w-sm">
-          <div className="text-7xl mb-6">🌿</div>
-          <h1 className="text-4xl font-bold text-white mb-3">
-            Únete a <span className="text-green-400">GreenAlert</span>
-          </h1>
+          <img src="/chrome-512x512.png" alt="GreenAlert" className="w-48 mx-auto mb-6 drop-shadow-2xl" />
           <p className="text-gray-400 text-base leading-relaxed mb-10">
             Sé parte de la comunidad que cuida el medio ambiente. Reporta, comparte y genera cambio desde tu territorio.
           </p>
           <div className="space-y-3 text-left">
             {[
-              { icon: '✅', text: 'Registro gratuito, sin costo alguno' },
-              { icon: '🔒', text: 'Tus datos protegidos con cifrado' },
-              { icon: '📱', text: 'Accesible desde cualquier dispositivo' },
-            ].map(({ icon, text }) => (
+              { Icon: CheckCircle2, text: 'Registro gratuito, sin costo alguno' },
+              { Icon: Lock,         text: 'Tus datos protegidos con cifrado' },
+              { Icon: Smartphone,   text: 'Accesible desde cualquier dispositivo' },
+            ].map(({ Icon, text }) => (
               <div key={text} className="flex items-center gap-3 text-gray-300 text-sm bg-gray-800/60 rounded-lg px-4 py-2.5">
-                <span>{icon}</span>
+                <Icon className="w-4 h-4 text-green-400 shrink-0" />
                 <span>{text}</span>
               </div>
             ))}
@@ -88,12 +89,9 @@ export default function Register() {
         <div className="w-full max-w-md">
 
           {/* Logo visible solo en mobile/tablet */}
-          <div className="lg:hidden text-center mb-8">
-            <Link to="/" className="inline-flex items-center gap-2">
-              <span className="text-green-500 text-2xl">🌿</span>
-              <span className="font-bold text-2xl text-white">
-                Green<span className="text-green-400">Alert</span>
-              </span>
+          <div className="lg:hidden flex justify-center mb-8">
+            <Link to="/">
+              <img src="/chrome-512x512.png" alt="GreenAlert" className="h-20 w-auto object-contain" />
             </Link>
           </div>
 
@@ -105,26 +103,38 @@ export default function Register() {
 
             {error && (
               <div className="mb-5 flex items-start gap-2.5 px-4 py-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm">
-                <span className="mt-0.5 shrink-0">⚠️</span>
+                <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
                 <span>{error}</span>
               </div>
             )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Nombre */}
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1.5">
-                  Nombre completo
-                </label>
-                <input
-                  type="text"
-                  required
-                  autoComplete="name"
-                  value={form.nombre}
-                  onChange={(e) => set('nombre', e.target.value)}
-                  placeholder="Juan Pérez"
-                  className="w-full bg-gray-800 border border-gray-700 text-gray-100 placeholder-gray-500 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500/40 transition"
-                />
+              {/* Nombre + Apellido */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-1.5">Nombre *</label>
+                  <input
+                    type="text"
+                    required
+                    autoComplete="given-name"
+                    value={form.nombre}
+                    onChange={(e) => set('nombre', e.target.value)}
+                    placeholder="Juan"
+                    className="w-full bg-gray-800 border border-gray-700 text-gray-100 placeholder-gray-500 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500/40 transition"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-1.5">Apellido *</label>
+                  <input
+                    type="text"
+                    required
+                    autoComplete="family-name"
+                    value={form.apellido}
+                    onChange={(e) => set('apellido', e.target.value)}
+                    placeholder="Pérez"
+                    className="w-full bg-gray-800 border border-gray-700 text-gray-100 placeholder-gray-500 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500/40 transition"
+                  />
+                </div>
               </div>
 
               {/* Email */}
@@ -198,9 +208,22 @@ export default function Register() {
                 )}
               </div>
 
+              {/* Teléfono (opcional) */}
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-1.5">
+                  Teléfono <span className="text-gray-500 font-normal">(opcional)</span>
+                </label>
+                <input
+                  type="tel"
+                  autoComplete="tel"
+                  value={form.telefono}
+                  onChange={(e) => set('telefono', e.target.value)}
+                  placeholder="+57 300 000 0000"
+                  className="w-full bg-gray-800 border border-gray-700 text-gray-100 placeholder-gray-500 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500/40 transition"
+                />
+              </div>
+
               <button
-                type="submit"
-                disabled={loading}
                 className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed mt-1"
               >
                 {loading ? (

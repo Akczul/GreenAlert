@@ -1,13 +1,14 @@
 import { useEffect, useState, lazy, Suspense } from 'react';
 import { checkHealth } from '../services/api';
+import { ClipboardList, Search, CheckCircle2, Users } from 'lucide-react';
 
 const ReportsMap = lazy(() => import('../components/ReportsMap'));
 
 const statCards = [
-  { label: 'Reportes este mes', icon: '📋' },
-  { label: 'En revisión',       icon: '🔍' },
-  { label: 'Resueltos',         icon: '✅' },
-  { label: 'Usuarios activos',  icon: '👥' },
+  { label: 'Reportes este mes', Icon: ClipboardList },
+  { label: 'En revisión',       Icon: Search },
+  { label: 'Resueltos',         Icon: CheckCircle2 },
+  { label: 'Usuarios activos',  Icon: Users },
 ];
 
 const severityClass = {
@@ -88,7 +89,9 @@ export default function Dashboard() {
       <section className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {statCards.map((s) => (
           <div key={s.label} className="card">
-            <span className="text-2xl">{s.icon}</span>
+            <div className="w-10 h-10 rounded-lg bg-green-500/10 flex items-center justify-center">
+              <s.Icon className="w-5 h-5 text-green-400" />
+            </div>
             <div className="mt-4">
               <div className="text-3xl font-extrabold text-white">—</div>
               <div className="text-sm text-gray-400 mt-1">{s.label}</div>

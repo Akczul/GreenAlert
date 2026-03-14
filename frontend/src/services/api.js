@@ -30,6 +30,6 @@ export const checkHealth = () => api.get('/health');
 
 // ── Auth ──
 export const loginUser    = (email, password)                 => api.post('/auth/login',    { email, password });
-export const registerUser = (nombre, email, password)         => api.post('/auth/register',  { nombre, email, password });
+export const registerUser = (nombre, apellido, email, password, telefono) => api.post('/auth/register',  { nombre, apellido, email, password, telefono });
 
 export default api;
