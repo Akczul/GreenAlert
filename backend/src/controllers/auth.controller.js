@@ -44,15 +44,27 @@ const toPublicUser = (user) => ({
   created_at: user.created_at,
 });
 
+const verifyPassword = (password, storedHash) => {
+  const [salt, key] = storedHash.split(':');
+  const derivedKey = crypto.scryptSync(password, salt, 64).toString('hex');
+  return key === derivedKey;
+};
+
 export const register = async (req, res, next) => {
   try {
-    const { nombre, email, password } = req.body ?? {};
+    const { nombre, apellido, email, password, telefono } = req.body ?? {};
 
-    const normalizedNombre = typeof nombre === 'string' ? nombre.trim() : '';
-    const normalizedEmail = typeof email === 'string' ? email.trim().toLowerCase() : '';
+    const normalizedNombre  = typeof nombre   === 'string' ? nombre.trim()   : '';
+    const normalizedApellido = typeof apellido === 'string' ? apellido.trim() : '';
+    const normalizedEmail   = typeof email    === 'string' ? email.trim().toLowerCase() : '';
+    const normalizedTelefono = typeof telefono === 'string' ? telefono.trim() : null;
 
     if (!normalizedNombre || normalizedNombre.length < 2) {
       return errorResponse(res, 'El nombre debe tener al menos 2 caracteres.', 400);
+    }
+
+    if (!normalizedApellido || normalizedApellido.length < 2) {
+      return errorResponse(res, 'El apellido debe tener al menos 2 caracteres.', 400);
     }
 
     if (!normalizedEmail || !EMAIL_REGEX.test(normalizedEmail)) {
@@ -72,10 +84,11 @@ export const register = async (req, res, next) => {
 
     const idUsuario = await UsuarioModel.create({
       nombre: normalizedNombre,
-      apellido: '',
+      apellido: normalizedApellido,
       email: normalizedEmail,
       password_hash,
       rol: 'ciudadano',
+      telefono: normalizedTelefono || null,
     });
 
     const createdUser = await UsuarioModel.findById(idUsuario);
@@ -94,6 +107,43 @@ export const register = async (req, res, next) => {
       'Cuenta creada correctamente.',
       201
     );
+  } catch (error) {
+    return next(error);
+  }
+};
+
+export const login = async (req, res, next) => {
+  try {
+    const { email, password } = req.body ?? {};
+
+    const normalizedEmail = typeof email === 'string' ? email.trim().toLowerCase() : '';
+
+    if (!normalizedEmail || !EMAIL_REGEX.test(normalizedEmail)) {
+      return errorResponse(res, 'Correo electronico invalido.', 400);
+    }
+
+    if (typeof password !== 'string' || password.length < 1) {
+      return errorResponse(res, 'Contrasena requerida.', 400);
+    }
+
+    const user = await UsuarioModel.findByEmail(normalizedEmail);
+    if (!user) {
+      return errorResponse(res, 'Credenciales incorrectas.', 401);
+    }
+
+    if (!user.activo) {
+      return errorResponse(res, 'Cuenta desactivada. Contacta al administrador.', 403);
+    }
+
+    if (!verifyPassword(password, user.password_hash)) {
+      return errorResponse(res, 'Credenciales incorrectas.', 401);
+    }
+
+    await UsuarioModel.updateUltimoAcceso(user.id_usuario);
+
+    const token = buildToken(user);
+
+    return successResponse(res, { token, user: toPublicUser(user) }, 'Inicio de sesion exitoso.');
   } catch (error) {
     return next(error);
   }
