@@ -1,26 +1,27 @@
 import { useEffect, useState, lazy, Suspense } from 'react';
-import { checkHealth } from '../services/api';
+import { checkHealth, getStats, getReportes } from '../services/api';
 import { ClipboardList, Search, CheckCircle2, Users } from 'lucide-react';
 
 const ReportsMap = lazy(() => import('../components/ReportsMap'));
 
-const statCards = [
-  { label: 'Reportes este mes', Icon: ClipboardList },
-  { label: 'En revisión',       Icon: Search },
-  { label: 'Resueltos',         Icon: CheckCircle2 },
-  { label: 'Usuarios activos',  Icon: Users },
-];
-
 const severityClass = {
-  Alta:  'bg-red-500/15 text-red-400 border border-red-500/30',
-  Media: 'bg-yellow-500/15 text-yellow-400 border border-yellow-500/30',
-  Baja:  'bg-green-500/15 text-green-400 border border-green-500/30',
+  bajo:    'bg-green-500/15 text-green-400 border border-green-500/30',
+  medio:   'bg-orange-500/15 text-orange-400 border border-orange-500/30',
+  alto:    'bg-red-500/15 text-red-400 border border-red-500/30',
+  critico: 'bg-red-600/25 text-rose-200 border border-red-500/60',
 };
 
 export default function Dashboard() {
   const [health, setHealth] = useState({ status: 'cargando', database: '...', timestamp: null });
   const [loading, setLoading] = useState(true);
-  const [activity] = useState([]);
+  const [stats, setStats] = useState(null);
+  const [activity, setActivity] = useState([]);
+  const [now, setNow] = useState(new Date());
+
+  useEffect(() => {
+    const tick = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(tick);
+  }, []);
 
   const fetchHealth = async () => {
     setLoading(true);
@@ -36,6 +37,12 @@ export default function Dashboard() {
 
   useEffect(() => {
     fetchHealth();
+    getStats()
+      .then(({ data }) => setStats(data.data.stats))
+      .catch(() => {});
+    getReportes({ limit: 50 })
+      .then(({ data }) => setActivity(data.data.reportes ?? []))
+      .catch(() => {});
   }, []);
 
   const isOk = health.status === 'ok';
@@ -71,7 +78,7 @@ export default function Dashboard() {
           <div className="flex items-center gap-3">
             {health.timestamp && (
               <span className="text-xs text-gray-500">
-                {new Date(health.timestamp).toLocaleTimeString('es-CO')}
+                {now.toLocaleTimeString('es-CO')}
               </span>
             )}
             <button
@@ -87,13 +94,20 @@ export default function Dashboard() {
 
       {/* Stats */}
       <section className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        {statCards.map((s) => (
+        {[
+          { label: 'Reportes este mes', Icon: ClipboardList, value: stats?.reportes_este_mes },
+          { label: 'En revisión',       Icon: Search,         value: stats?.en_revision },
+          { label: 'Resueltos',         Icon: CheckCircle2,   value: stats?.resueltos },
+          { label: 'Usuarios activos',  Icon: Users,          value: stats?.total_usuarios },
+        ].map((s) => (
           <div key={s.label} className="card">
             <div className="w-10 h-10 rounded-lg bg-green-500/10 flex items-center justify-center">
               <s.Icon className="w-5 h-5 text-green-400" />
             </div>
             <div className="mt-4">
-              <div className="text-3xl font-extrabold text-white">—</div>
+              <div className="text-3xl font-extrabold text-white">
+                {stats == null ? <span className="inline-block w-8 h-6 bg-gray-800 rounded animate-pulse" /> : (s.value ?? 0)}
+              </div>
               <div className="text-sm text-gray-400 mt-1">{s.label}</div>
             </div>
           </div>
@@ -122,13 +136,19 @@ export default function Dashboard() {
                   </td>
                 </tr>
               ) : (
-                activity.map((item, i) => (
-                  <tr key={item.id} className={`border-b border-gray-800/50 hover:bg-gray-800/40 transition-colors ${i === activity.length - 1 ? 'border-0' : ''}`}>
-                    <td className="px-5 py-3.5 text-gray-200 font-medium">{item.type}</td>
-                    <td className="px-5 py-3.5 text-gray-400 hidden sm:table-cell">{item.location}</td>
-                    <td className="px-5 py-3.5 text-gray-500 hidden md:table-cell">{item.time}</td>
+                activity.map((r, i) => (
+                  <tr key={r.id_reporte} className={`border-b border-gray-800/50 hover:bg-gray-800/40 transition-colors ${i === activity.length - 1 ? 'border-0' : ''}`}>
+                    <td className="px-5 py-3.5 text-gray-200 font-medium capitalize">{r.tipo_contaminacion}</td>
+                    <td className="px-5 py-3.5 text-gray-400 hidden sm:table-cell">
+                      {[r.municipio, r.departamento].filter(Boolean).join(', ') || r.direccion || '—'}
+                    </td>
+                    <td className="px-5 py-3.5 text-gray-500 hidden md:table-cell">
+                      {new Date(r.created_at).toLocaleDateString('es-CO')}
+                    </td>
                     <td className="px-5 py-3.5">
-                      <span className={`badge ${severityClass[item.severity]}`}>{item.severity}</span>
+                      <span className={`badge ${severityClass[r.nivel_severidad]}`}>
+                        {{ bajo:'Baja', medio:'Media', alto:'Alta', critico:'Crítico' }[r.nivel_severidad] ?? r.nivel_severidad}
+                      </span>
                     </td>
                   </tr>
                 ))
@@ -143,16 +163,17 @@ export default function Dashboard() {
         <div className="flex items-center justify-between mb-4">
           <h2 className="font-semibold text-white">Mapa de Reportes</h2>
           <div className="flex items-center gap-4 text-xs text-gray-400">
-            <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-red-400 inline-block" />Alta</span>
+            <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-rose-400 inline-block" />Crítico</span>
+            <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-red-500 inline-block" />Alta</span>
             <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-orange-400 inline-block" />Media</span>
             <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-green-400 inline-block" />Baja</span>
           </div>
         </div>
-        <div className="rounded-xl overflow-hidden border border-gray-800" style={{ height: '420px' }}>
+        <div className="rounded-xl overflow-hidden border border-gray-800" style={{ height: '560px' }}>
           <Suspense fallback={
             <div className="h-full flex items-center justify-center bg-gray-900 text-gray-500 text-sm">Cargando mapa...</div>
           }>
-            <ReportsMap />
+            <ReportsMap reports={activity} />
           </Suspense>
         </div>
       </section>

@@ -2,6 +2,7 @@ import express from 'express';
 import { notFoundHandler, errorHandler } from '../middlewares/errorHandler.js';
 import healthRouter from '../routes/health.routes.js';
 import authRouter from '../routes/auth.routes.js';
+import reporteRouter from '../routes/reporte.routes.js';
 
 const app = express();
 
@@ -11,6 +12,7 @@ app.use(express.urlencoded({ extended: true }));
 // rutas
 app.use('/health', healthRouter);
 app.use('/auth', authRouter);
+app.use('/reportes', reporteRouter);
 
  
 app.use(notFoundHandler);

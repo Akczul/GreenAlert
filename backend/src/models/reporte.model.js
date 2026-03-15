@@ -33,7 +33,8 @@ export const ReporteModel = {
     }
 
     const where = conditions.join(' AND ');
-    params.push(Number(limit), Number(offset));
+    const safeLimit  = Math.max(1, Math.min(100, parseInt(limit,  10) || 20));
+    const safeOffset = Math.max(0,               parseInt(offset, 10) || 0);
 
     const [rows] = await pool.execute(
       `SELECT r.id_reporte, r.uuid, r.id_usuario,
@@ -45,7 +46,7 @@ export const ReporteModel = {
        FROM reportes r
        WHERE ${where}
        ORDER BY r.created_at DESC
-       LIMIT ? OFFSET ?`,
+       LIMIT ${safeLimit} OFFSET ${safeOffset}`,
       params
     );
     return rows;
@@ -75,6 +76,8 @@ export const ReporteModel = {
     //Busca los reportes creados por un usuario específico
    
   findByUsuario: async (id_usuario, { limit = 20, offset = 0 } = {}) => {
+    const safeLimit  = Math.max(1, Math.min(100, parseInt(limit,  10) || 20));
+    const safeOffset = Math.max(0,               parseInt(offset, 10) || 0);
     const [rows] = await pool.execute(
       `SELECT id_reporte, uuid, tipo_contaminacion, estado, nivel_severidad,
               titulo, municipio, departamento, votos_relevancia, vistas,
@@ -82,8 +85,8 @@ export const ReporteModel = {
        FROM reportes
        WHERE id_usuario = ? AND deleted_at IS NULL
        ORDER BY created_at DESC
-       LIMIT ? OFFSET ?`,
-      [id_usuario, Number(limit), Number(offset)]
+       LIMIT ${safeLimit} OFFSET ${safeOffset}`,
+      [id_usuario]
     );
     return rows;
   },
@@ -103,21 +106,36 @@ export const ReporteModel = {
     municipio = null,
     departamento = null,
   }) => {
-    const [result] = await pool.execute(
-      `INSERT INTO reportes
-         (id_usuario, tipo_contaminacion, nivel_severidad, titulo, descripcion,
-          latitud, longitud, direccion, municipio, departamento, punto_geo)
-       VALUES
-         (?, ?, ?, ?, ?,
-          ?, ?, ?, ?, ?,
-          ST_GeomFromText(CONCAT('POINT(', ?, ' ', ?, ')'), 4326))`,
-      [
-        id_usuario, tipo_contaminacion, nivel_severidad, titulo, descripcion,
-        latitud, longitud, direccion, municipio, departamento,
-        longitud, latitud,  
-      ]
-    );
-    return result.insertId;
+    const hasCoords = latitud !== null && latitud !== undefined &&
+                      longitud !== null && longitud !== undefined;
+
+    if (hasCoords) {
+      const [result] = await pool.execute(
+        `INSERT INTO reportes
+           (id_usuario, tipo_contaminacion, nivel_severidad, titulo, descripcion,
+            latitud, longitud, direccion, municipio, departamento, punto_geo)
+         VALUES
+           (?, ?, ?, ?, ?,
+            ?, ?, ?, ?, ?,
+            ST_GeomFromText(CONCAT('POINT(', ?, ' ', ?, ')'), 4326))`,
+        [
+          id_usuario, tipo_contaminacion, nivel_severidad, titulo, descripcion,
+          latitud, longitud, direccion, municipio, departamento,
+          longitud, latitud,
+        ]
+      );
+      return result.insertId;
+    } else {
+      const [result] = await pool.execute(
+        `INSERT INTO reportes
+           (id_usuario, tipo_contaminacion, nivel_severidad, titulo, descripcion,
+            latitud, longitud, direccion, municipio, departamento)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [id_usuario, tipo_contaminacion, nivel_severidad, titulo, descripcion,
+         null, null, direccion, municipio, departamento]
+      );
+      return result.insertId;
+    }
   },
 
   
@@ -169,5 +187,23 @@ export const ReporteModel = {
       [id_reporte]
     );
     return result.affectedRows > 0;
+  },
+
+  // Estadísticas globales para Dashboard y Home
+  getStats: async () => {
+    const [[r]] = await pool.execute(
+      `SELECT
+         COUNT(*)                                                                          AS total_reportes,
+         SUM(CASE WHEN MONTH(created_at)=MONTH(NOW()) AND YEAR(created_at)=YEAR(NOW()) THEN 1 ELSE 0 END) AS reportes_este_mes,
+         SUM(CASE WHEN estado='en_revision'  THEN 1 ELSE 0 END)                          AS en_revision,
+         SUM(CASE WHEN estado='resuelto'     THEN 1 ELSE 0 END)                          AS resueltos,
+         COUNT(DISTINCT CASE WHEN municipio IS NOT NULL AND municipio!='' THEN municipio END) AS municipios_activos,
+         SUM(CASE WHEN estado IN ('en_revision','verificado','en_proceso') THEN 1 ELSE 0 END) AS con_seguimiento
+       FROM reportes WHERE deleted_at IS NULL`
+    );
+    const [[u]] = await pool.execute(
+      `SELECT COUNT(*) AS total_usuarios FROM usuarios WHERE activo=1 AND deleted_at IS NULL`
+    );
+    return { ...r, ...u };
   },
 };
