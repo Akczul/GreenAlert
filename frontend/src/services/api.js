@@ -29,7 +29,13 @@ api.interceptors.response.use(
 export const checkHealth = () => api.get('/health');
 
 // ── Auth ──
-export const loginUser    = (email, password)                 => api.post('/auth/login',    { email, password });
-export const registerUser = (nombre, apellido, email, password, telefono) => api.post('/auth/register',  { nombre, apellido, email, password, telefono });
+export const loginUser    = (email, password)                                   => api.post('/auth/login',    { email, password });
+export const registerUser = (nombre, apellido, email, password, telefono)       => api.post('/auth/register', { nombre, apellido, email, password, telefono });
 
-export default api;
+// ── Reportes ──
+export const getStats       = ()           => api.get('/reportes/stats');
+export const createReporte  = (data)       => api.post('/reportes', data);
+export const getReportes    = (params)     => api.get('/reportes', { params });
+export const getReporteById = (id)         => api.get(`/reportes/${id}`);
+export const updateReporte  = (id, data)   => api.patch(`/reportes/${id}`, data);
+export const deleteReporte  = (id)         => api.delete(`/reportes/${id}`);

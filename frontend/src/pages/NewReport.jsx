@@ -1,18 +1,26 @@
 import { useState, lazy, Suspense } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { CheckCircle2, Paperclip } from 'lucide-react';
+import { createReporte } from '../services/api';
 
 const LocationPicker = lazy(() => import('../components/LocationPicker'));
 
+// valor BD → etiqueta visible
 const TYPES = [
-  'Contaminación de agua',
-  'Tala ilegal',
-  'Quema de residuos',
-  'Contaminación del aire',
-  'Residuos sólidos',
-  'Ruido excesivo',
-  'Contaminación del suelo',
-  'Otro',
+  { value: 'agua',      label: 'Contaminación de agua' },
+  { value: 'aire',      label: 'Contaminación del aire' },
+  { value: 'suelo',     label: 'Contaminación del suelo' },
+  { value: 'ruido',     label: 'Ruido excesivo' },
+  { value: 'residuos',  label: 'Residuos sólidos' },
+  { value: 'luminica',  label: 'Contaminación lumínica' },
+  { value: 'otro',      label: 'Otro' },
+];
+
+const SEVERIDADES = [
+  { value: 'bajo',    label: 'Baja' },
+  { value: 'medio',   label: 'Media' },
+  { value: 'alto',    label: 'Alta' },
+  { value: 'critico', label: 'Crítico' },
 ];
 
 const STEPS = ['Tipo', 'Detalle', 'Ubicación', 'Evidencia'];
@@ -34,6 +42,9 @@ export default function NewReport() {
     file: null,
   });
 
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
+
   const set = (key, value) => setForm((p) => ({ ...p, [key]: value }));
 
   const canNext = () => {
@@ -43,10 +54,28 @@ export default function NewReport() {
     return true;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Mock submit
-    setTimeout(() => setSubmitted(true), 600);
+    setSubmitError('');
+    setSubmitting(true);
+    try {
+      await createReporte({
+        tipo_contaminacion: form.tipo_contaminacion,
+        nivel_severidad:    form.nivel_severidad,
+        titulo:             form.titulo,
+        descripcion:        form.descripcion,
+        direccion:          form.direccion,
+        municipio:          form.municipio || undefined,
+        departamento:       form.departamento || undefined,
+        latitud:            form.latitud !== '' ? form.latitud : undefined,
+        longitud:           form.longitud !== '' ? form.longitud : undefined,
+      });
+      setSubmitted(true);
+    } catch (err) {
+      setSubmitError(err.response?.data?.message || 'Error al enviar el reporte. Intenta de nuevo.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (submitted) {
@@ -61,7 +90,7 @@ export default function NewReport() {
           Gracias por contribuir al cuidado del medio ambiente.
         </p>
         <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
-          <button onClick={() => { setSubmitted(false); setStep(0); setForm({ type: '', severity: '', title: '', description: '', location: '', coords: '', file: null }); }} className="btn-secondary">
+          <button onClick={() => { setSubmitted(false); setStep(0); setForm({ tipo_contaminacion: '', nivel_severidad: '', titulo: '', descripcion: '', direccion: '', municipio: '', departamento: '', latitud: '', longitud: '', file: null }); }} className="btn-secondary">
             Nuevo reporte
           </button>
           <Link to="/reports" className="btn-primary">Ver reportes</Link>
@@ -71,7 +100,7 @@ export default function NewReport() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto px-4 sm:px-6 py-10">
+    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10">
       {/* Header */}
       <div className="mb-8">
         <Link to="/reports" className="text-sm text-gray-500 hover:text-gray-300 flex items-center gap-1.5 mb-4">
@@ -103,40 +132,41 @@ export default function NewReport() {
           {step === 0 && (
             <div className="flex flex-col gap-5">
               <h2 className="font-semibold text-white">¿Qué tipo de problema es?</h2>
-              <div className="grid grid-cols-2 gap-3">
-                {TYPES.map((t) => (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {TYPES.map(({ value, label }) => (
                   <button
                     type="button"
-                    key={t}
-                    onClick={() => set('tipo_contaminacion', t)}
+                    key={value}
+                    onClick={() => set('tipo_contaminacion', value)}
                     className={`text-sm text-left px-4 py-3 rounded-lg border transition-colors ${
-                      form.tipo_contaminacion === t
+                      form.tipo_contaminacion === value
                         ? 'border-green-500 bg-green-500/10 text-green-300'
                         : 'border-gray-700 bg-gray-800/50 text-gray-300 hover:border-gray-600'
                     }`}
                   >
-                    {t}
+                    {label}
                   </button>
                 ))}
               </div>
 
               <div>
                 <label className="text-sm text-gray-400 mb-2 block">Severidad</label>
-                <div className="flex gap-3">
-                  {['Baja', 'Media', 'Alta'].map((s) => (
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
+                  {SEVERIDADES.map(({ value, label }) => (
                     <button
                       type="button"
-                      key={s}
-                      onClick={() => set('nivel_severidad', s)}
-                      className={`flex-1 py-2 text-sm rounded-lg border transition-colors ${
-                        form.nivel_severidad === s
-                          ? s === 'Alta' ? 'border-red-500 bg-red-500/10 text-red-400'
-                          : s === 'Media' ? 'border-orange-500 bg-orange-500/10 text-orange-400'
-                          : 'border-gray-400 bg-gray-500/10 text-gray-300'
+                      key={value}
+                      onClick={() => set('nivel_severidad', value)}
+                    className={`py-2.5 text-sm rounded-lg border transition-colors ${
+                        form.nivel_severidad === value
+                          ? value === 'critico' ? 'border-red-400 bg-red-500/10 text-red-300'
+                          : value === 'alto'    ? 'border-red-500 bg-red-500/10 text-red-400'
+                          : value === 'medio'   ? 'border-orange-500 bg-orange-500/10 text-orange-400'
+                          : 'border-green-500 bg-green-500/10 text-green-400'
                           : 'border-gray-700 text-gray-500 hover:border-gray-600'
                       }`}
                     >
-                      {s}
+                      {label}
                     </button>
                   ))}
                 </div>
@@ -163,9 +193,9 @@ export default function NewReport() {
               <div>
                 <label className="text-sm text-gray-400 mb-1.5 block">Descripción detallada *</label>
                 <textarea
-                  rows={4}
+                  rows={5}
                   placeholder="Describe qué está pasando, desde cuándo, y cualquier detalle relevante..."
-                  className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:border-green-500 transition-colors resize-none"
+                  className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:border-green-500 transition-colors resize-none sm:rows-6"
                   value={form.descripcion}
                   onChange={(e) => set('descripcion', e.target.value)}
                 />
@@ -189,7 +219,7 @@ export default function NewReport() {
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm text-gray-400 mb-1.5 block">Municipio *</label>
+                  <label className="text-sm text-gray-400 mb-1.5 block">Municipio</label>
                   <input
                     type="text"
                     placeholder="Ej: Bogotá"
@@ -199,7 +229,7 @@ export default function NewReport() {
                   />
                 </div>
                 <div>
-                  <label className="text-sm text-gray-400 mb-1.5 block">Departamento *</label>
+                  <label className="text-sm text-gray-400 mb-1.5 block">Departamento</label>
                   <input
                     type="text"
                     placeholder="Ej: Cundinamarca"
@@ -231,12 +261,17 @@ export default function NewReport() {
                 </div>
               </div>
               <Suspense fallback={
-                <div className="h-44 rounded-lg bg-gray-800/50 border border-gray-700 flex items-center justify-center text-gray-500 text-sm">Cargando mapa...</div>
+                <div className="h-64 rounded-lg bg-gray-800/50 border border-gray-700 flex items-center justify-center text-gray-500 text-sm">Cargando mapa...</div>
               }>
                 <LocationPicker
                   latitud={form.latitud}
                   longitud={form.longitud}
-                  onChange={(lat, lng) => { set('latitud', lat); set('longitud', lng); }}
+                  onChange={(lat, lng, municipio, departamento) => {
+                    set('latitud', lat);
+                    set('longitud', lng);
+                    if (municipio)    set('municipio', municipio);
+                    if (departamento) set('departamento', departamento);
+                  }}
                 />
               </Suspense>
             </div>
@@ -265,8 +300,8 @@ export default function NewReport() {
               {/* Summary */}
               <div className="bg-gray-800/50 rounded-xl p-4 border border-gray-700 text-sm space-y-2">
                 <p className="font-medium text-gray-300 mb-3">Resumen del reporte</p>
-                <div className="flex justify-between text-gray-400"><span>Tipo</span><span className="text-white">{form.tipo_contaminacion}</span></div>
-                <div className="flex justify-between text-gray-400"><span>Severidad</span><span className="text-white">{form.nivel_severidad}</span></div>
+                <div className="flex justify-between text-gray-400"><span>Tipo</span><span className="text-white">{TYPES.find(t => t.value === form.tipo_contaminacion)?.label ?? form.tipo_contaminacion}</span></div>
+                <div className="flex justify-between text-gray-400"><span>Severidad</span><span className="text-white">{SEVERIDADES.find(s => s.value === form.nivel_severidad)?.label ?? form.nivel_severidad}</span></div>
                 <div className="flex justify-between text-gray-400"><span>Título</span><span className="text-white truncate max-w-[60%] text-right">{form.titulo}</span></div>
                 <div className="flex justify-between text-gray-400"><span>Municipio</span><span className="text-white">{form.municipio}</span></div>
                 <div className="flex justify-between text-gray-400"><span>Departamento</span><span className="text-white">{form.departamento}</span></div>
@@ -297,9 +332,14 @@ export default function NewReport() {
               Siguiente
             </button>
           ) : (
-            <button type="submit" className="btn-primary">
-              Enviar Reporte
-            </button>
+            <div className="flex flex-col items-end gap-2">
+              {submitError && (
+                <p className="text-xs text-red-400">{submitError}</p>
+              )}
+              <button type="submit" disabled={submitting} className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed">
+                {submitting ? 'Enviando...' : 'Enviar Reporte'}
+              </button>
+            </div>
           )}
         </div>
       </form>
