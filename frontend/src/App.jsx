@@ -8,6 +8,8 @@ import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import Reports from './pages/Reports';
 import NewReport from './pages/NewReport';
+import ReportDetail from './pages/ReportDetail';
+import NotFound from './pages/NotFound';
 
 export default function App() {
   return (
@@ -26,11 +28,15 @@ export default function App() {
           {/* Rutas protegidas con Layout */}
           <Route element={<ProtectedRoute />}>
             <Route path="/" element={<Layout />}>
-              <Route path="dashboard" element={<Dashboard />} />
-              <Route path="reports" element={<Reports />} />
-              <Route path="reports/new" element={<NewReport />} />
+              <Route path="dashboard"    element={<Dashboard />} />
+              <Route path="reports"       element={<Reports />} />
+              <Route path="reports/new"  element={<NewReport />} />
+              <Route path="reports/:id"  element={<ReportDetail />} />
             </Route>
           </Route>
+
+          {/* 404 */}
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </AuthProvider>
     </BrowserRouter>

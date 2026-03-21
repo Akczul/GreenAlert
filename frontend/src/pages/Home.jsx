@@ -1,5 +1,7 @@
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { MapPin, Camera, Users, CheckCircle2, BarChart2, Bell } from 'lucide-react';
+import { getStats } from '../services/api';
 
 const features = [
   {
@@ -34,14 +36,21 @@ const features = [
   },
 ];
 
-const stats = [
-  { value: '—', label: 'Reportes registrados' },
-  { value: '—', label: 'Municipios activos' },
-  { value: '—', label: 'Casos con seguimiento' },
-  { value: '—', label: 'Ciudadanos participando' },
-];
-
 export default function Home() {
+  const [statsData, setStatsData] = useState(null);
+
+  useEffect(() => {
+    getStats()
+      .then(({ data }) => setStatsData(data.data.stats))
+      .catch(() => {});
+  }, []);
+
+  const statsDisplay = [
+    { label: 'Reportes registrados',   value: statsData?.total_reportes },
+    { label: 'Municipios activos',      value: statsData?.municipios_activos },
+    { label: 'Casos con seguimiento',   value: statsData?.con_seguimiento },
+    { label: 'Ciudadanos participando', value: statsData?.total_usuarios },
+  ];
   return (
     <div className="flex flex-col">
       {/* Hero */}
@@ -81,9 +90,13 @@ export default function Home() {
       {/* Stats */}
       <section className="py-12 px-4 sm:px-6 border-y border-gray-800 bg-gray-900/40">
         <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-          {stats.map((s) => (
+          {statsDisplay.map((s) => (
             <div key={s.label}>
-              <div className="text-3xl font-extrabold text-green-400">{s.value}</div>
+              <div className="text-3xl font-extrabold text-green-400">
+                {statsData == null
+                  ? <span className="inline-block w-10 h-8 bg-green-900/30 rounded animate-pulse" />
+                  : (s.value ?? 0)}
+              </div>
               <div className="text-sm text-gray-400 mt-1">{s.label}</div>
             </div>
           ))}

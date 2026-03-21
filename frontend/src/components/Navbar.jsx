@@ -8,8 +8,8 @@ const navItems = [
   { to: '/reports', label: 'Reportes' },
 ];
 
-const rolLabel = { ciudadano: 'Ciudadano', admin: 'Admin' };
-const rolColor = { ciudadano: 'text-green-400', admin: 'text-yellow-400' };
+const rolLabel = { ciudadano: 'Ciudadano', moderador: 'Moderador', admin: 'Admin' };
+const rolColor = { ciudadano: 'text-green-400', moderador: 'text-blue-400', admin: 'text-yellow-400' };
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
