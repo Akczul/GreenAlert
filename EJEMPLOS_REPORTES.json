@@ -1,0 +1,170 @@
+{
+  "documentacion": "Ejemplos de reportes y respuestas de API para cada categoría de riesgo ambiental",
+  "ejemplos": [
+    {
+      "categoria": "deforestacion",
+      "nombre_categoria": "Deforestación",
+      "ejemplo_reporte": {
+        "titulo": "Tala masiva de árboles en sector Mocoapamba",
+        "descripcion": "Se observa pérdida de cobertura forestal aproximadamente de 50 hectáreas. Aparentemente realizan labores de extracción de madera de forma indiscriminada. Los árboles cortados permanecen en el terreno sin recolectarse.",
+        "tipo_contaminacion": "deforestacion",
+        "nivel_severidad": "alto",
+        "direccion": "Vereda Mocoapamba, sector Los Tigrillos",
+        "municipio": "Mocoa",
+        "departamento": "Putumayo",
+        "latitud": 1.1506,
+        "longitud": -76.6451,
+        "imagen_url": "https://api.greenalert.local/uploads/deforestacion_001.jpg"
+      },
+      "respuesta_api": {
+        "success": true,
+        "message": "Reporte creado correctamente.",
+        "data": {
+          "reporte": {
+            "id_reporte": 15,
+            "uuid": "a1b2c3d4-e5f6-7890-1234-567890abcdef",
+            "id_usuario": 3,
+            "tipo_contaminacion": "deforestacion",
+            "estado": "pendiente",
+            "nivel_severidad": "alto",
+            "titulo": "Tala masiva de árboles en sector Mocoapamba",
+            "latitud": "1.15060000",
+            "longitud": "-76.64510000",
+            "votos_relevancia": 0,
+            "vistas": 0,
+            "created_at": "2026-03-20T14:32:15.000Z"
+          }
+        }
+      }
+    },
+    {
+      "categoria": "incendios_forestales",
+      "nombre_categoria": "Incendios Forestales",
+      "ejemplo_reporte": {
+        "titulo": "Incendio forestal activo en la zona de amortiguación",
+        "descripcion": "Reporte de columna de humo visible desde varios puntos de la ciudad. El fuego aparentemente se originó hace aproximadamente 2 horas y se está propagando rápidamente debido a los vientos. Se ha contactado a los bomberos pero aún no llegan al sitio. Hay riesgo para viviendas cercanas.",
+        "tipo_contaminacion": "incendios_forestales",
+        "nivel_severidad": "critico",
+        "direccion": "Kilómetro 2 vía a Sibundoy, zona boscosa",
+        "municipio": "Mocoa",
+        "departamento": "Putumayo",
+        "latitud": 1.1480,
+        "longitud": -76.6080,
+        "imagen_url": "https://api.greenalert.local/uploads/incendio_001.jpg"
+      },
+      "respuesta_api": {
+        "success": true,
+        "message": "Reporte creado correctamente.",
+        "data": {
+          "reporte": {
+            "id_reporte": 16,
+            "uuid": "b2c3d4e5-f6a7-8901-2345-678901bcdef0",
+            "id_usuario": 5,
+            "tipo_contaminacion": "incendios_forestales",
+            "estado": "pendiente",
+            "nivel_severidad": "critico",
+            "titulo": "Incendio forestal activo en la zona de amortiguación",
+            "latitud": "1.14800000",
+            "longitud": "-76.60800000",
+            "created_at": "2026-03-20T16:45:22.000Z"
+          }
+        }
+      }
+    },
+    {
+      "categoria": "deslizamientos",
+      "nombre_categoria": "Deslizamientos",
+      "ejemplo_reporte": {
+        "titulo": "Deslizamiento de tierra en vía principal",
+        "descripcion": "Movimiento de aproximadamente 200 metros cúbicos de tierra que obstruye completamente la vía. El deslizamiento se produjo durante la madrugada tras 8 horas de lluvia intensa.",
+        "tipo_contaminacion": "deslizamientos",
+        "nivel_severidad": "alto",
+        "direccion": "Vía Mocoa - Sibundoy, Km 15",
+        "municipio": "Mocoa",
+        "departamento": "Putumayo",
+        "latitud": 1.1720,
+        "longitud": -76.6320,
+        "imagen_url": "https://api.greenalert.local/uploads/deslizamiento_001.jpg"
+      },
+      "respuesta_api": {
+        "success": true,
+        "message": "Reporte creado correctamente.",
+        "data": {
+          "reporte": {
+            "id_reporte": 17,
+            "uuid": "c3d4e5f6-a7b8-9012-3456-789012cdef01",
+            "id_usuario": 7,
+            "tipo_contaminacion": "deslizamientos",
+            "estado": "pendiente",
+            "nivel_severidad": "alto",
+            "titulo": "Deslizamiento de tierra en vía principal",
+            "latitud": "1.17200000",
+            "longitud": "-76.63200000",
+            "created_at": "2026-03-20T08:15:45.000Z"
+          }
+        }
+      }
+    },
+    {
+      "categoria": "avalanchas_fluviotorrenciales",
+      "nombre_categoria": "Avalanchas Fluviotorrenciales",
+      "ejemplo_reporte": {
+        "titulo": "Crecida súbita del río Mocoa",
+        "descripcion": "El río Mocoa presenta una crecida repentina causada por lluvia torrencial en las zonas altas. El nivel del agua ha subido más de 3 metros en los últimos 45 minutos. Se está aproximando una onda de escombros.",
+        "tipo_contaminacion": "avalanchas_fluviotorrenciales",
+        "nivel_severidad": "critico",
+        "direccion": "Desembocadura Río Mocoa - Avenida Comercial",
+        "municipio": "Mocoa",
+        "departamento": "Putumayo",
+        "latitud": 1.1460,
+        "longitud": -76.6430,
+        "imagen_url": "https://api.greenalert.local/uploads/avalancha_001.jpg"
+      },
+      "respuesta_api": {
+        "success": true,
+        "message": "Reporte creado correctamente.",
+        "data": {
+          "reporte": {
+            "id_reporte": 18,
+            "uuid": "d4e5f6a7-b8c9-0123-4567-890123def012",
+            "id_usuario": 2,
+            "tipo_contaminacion": "avalanchas_fluviotorrenciales",
+            "estado": "pendiente",
+            "nivel_severidad": "critico",
+            "titulo": "Crecida súbita del río Mocoa",
+            "latitud": "1.14600000",
+            "longitud": "-76.64300000",
+            "created_at": "2026-03-20T19:20:30.000Z"
+          }
+        }
+      }
+    }
+  ],
+  "endpoints_api": {
+    "obtener_categorias": {
+      "metodo": "GET",
+      "ruta": "/api/categorias",
+      "descripcion": "Obtener todas las categorías con estadísticas"
+    },
+    "obtener_categoria": {
+      "metodo": "GET",
+      "ruta": "/api/categorias/:codigo",
+      "descripcion": "Obtener detalle de una categoría específica"
+    },
+    "obtener_reportes_categoria": {
+      "metodo": "GET",
+      "ruta": "/api/categorias/:codigo/reportes",
+      "descripcion": "Listar reportes de una categoría con filtros opcionales"
+    },
+    "estadisticas": {
+      "metodo": "GET",
+      "ruta": "/api/categorias/estadisticas/resumen",
+      "descripcion": "Estadísticas de reportes por categoría"
+    },
+    "estadisticas_severidad": {
+      "metodo": "GET",
+      "ruta": "/api/categorias/estadisticas/por-severidad",
+      "descripcion": "Estadísticas agrupadas por severidad y categoría"
+    }
+  }
+}
