@@ -1,11 +1,12 @@
 import { useState, lazy, Suspense } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import {
-  CheckCircle2, Paperclip, AlertCircle, Info,
+  Paperclip, AlertCircle, Info,
   Trees, Flame, AlertTriangle, Waves,
   Droplet, Wind, Leaf, Volume2, Trash2, Lightbulb, HelpCircle,
 } from 'lucide-react';
 import { createReporte } from '../services/api';
+import { useToast } from '../context/ToastContext';
 import {
   CONFIGURACION_CATEGORIAS,
   TIPOS_CONTAMINACION,
@@ -57,11 +58,10 @@ const CATS_CONTAMINACION = TODA_CONFIG.filter(c => !CATEGORIAS_RIESGO.has(c.valu
 // ── Componente principal ──────────────────────────────────────────────────────
 export default function FormularioReporte() {
   const navigate = useNavigate();
+  const { showToast } = useToast();
 
   const [step,       setStep]      = useState(0);
-  const [submitted,  setSubmitted] = useState(false);
   const [submitting, setSubmitting]= useState(false);
-  const [submitError,setSubmitError]=useState('');
 
   const [form, setForm] = useState({
     tipo_contaminacion: '',
@@ -120,7 +120,6 @@ export default function FormularioReporte() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!canNext()) return;
-    setSubmitError('');
     setSubmitting(true);
     try {
       const descripcionFinal = form.tipo_contaminacion === TIPOS_CONTAMINACION.OTRO && form.otro_especifica
@@ -155,43 +154,18 @@ export default function FormularioReporte() {
         };
       }
 
-      await createReporte(payload);
-      setSubmitted(true);
+      const res = await createReporte(payload);
+      const idReporte = res.data.data.reporte.id_reporte;
+      showToast('¡Reporte enviado correctamente!', 'success', 4000);
+      navigate(`/reports/${idReporte}`);
     } catch (err) {
-      setSubmitError(err.response?.data?.message || 'Error al enviar el reporte. Intenta de nuevo.');
+      showToast(err.response?.data?.message || 'Error al enviar el reporte. Intenta de nuevo.', 'error');
     } finally {
       setSubmitting(false);
     }
   };
 
-  // ── Pantalla de éxito ─────────────────────────────────────────────────────
-  if (submitted) {
-    return (
-      <div className="max-w-lg mx-auto px-4 py-24 text-center">
-        <div className="w-20 h-20 rounded-full bg-green-500/15 flex items-center justify-center mx-auto mb-6">
-          <CheckCircle2 className="w-10 h-10 text-green-400" />
-        </div>
-        <h2 className="text-2xl font-bold text-white">¡Reporte enviado!</h2>
-        <p className="text-gray-400 mt-3 leading-relaxed">
-          Tu reporte ha sido registrado y será revisado por el equipo.
-          Gracias por contribuir al cuidado del medio ambiente.
-        </p>
-        <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
-          <button
-            onClick={() => {
-              setSubmitted(false);
-              setStep(0);
-              setForm({ tipo_contaminacion:'', nivel_severidad:'', otro_especifica:'', titulo:'', descripcion:'', direccion:'', municipio:'', departamento:'', latitud:'', longitud:'', file: null });
-            }}
-            className="btn-secondary"
-          >
-            Nuevo reporte
-          </button>
-          <Link to="/reports" className="btn-primary">Ver reportes</Link>
-        </div>
-      </div>
-    );
-  }
+
 
   // ── Ícono de categoría helper ─────────────────────────────────────────────
   const CatIcon = ({ tipo, size = 18, style }) => {
@@ -635,11 +609,6 @@ export default function FormularioReporte() {
             </button>
           ) : (
             <div className="flex flex-col items-stretch sm:items-end gap-2">
-              {submitError && (
-                <p className="text-xs text-red-400 flex items-center gap-1.5">
-                  <AlertCircle size={12} /> {submitError}
-                </p>
-              )}
               <button
                 type="submit"
                 disabled={submitting}
