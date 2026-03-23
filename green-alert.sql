@@ -53,7 +53,7 @@ CREATE TABLE IF NOT EXISTS `reportes` (
   `id_reporte` bigint unsigned NOT NULL AUTO_INCREMENT,
   `uuid` char(36) NOT NULL DEFAULT (uuid()),
   `id_usuario` bigint unsigned NOT NULL,
-  `tipo_contaminacion` enum('agua','aire','suelo','ruido','residuos','luminica','otro') NOT NULL,
+  `tipo_contaminacion` enum('agua','aire','suelo','ruido','residuos','luminica','deforestacion','incendios_forestales','deslizamientos','avalanchas_fluviotorrenciales','otro') NOT NULL,
   `estado` enum('pendiente','en_revision','verificado','en_proceso','resuelto','rechazado') NOT NULL DEFAULT 'pendiente',
   `nivel_severidad` enum('bajo','medio','alto','critico') NOT NULL DEFAULT 'medio',
   `titulo` varchar(255) NOT NULL,
