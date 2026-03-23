@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { CheckCircle2, Lock, Smartphone, AlertTriangle } from 'lucide-react';
+import { useToast } from '../context/ToastContext';
+import { CheckCircle2, Lock, Smartphone } from 'lucide-react';
 
 export default function Register() {
   const { register } = useAuth();
+  const { showToast } = useToast();
   const navigate = useNavigate();
 
   const [form, setForm] = useState({
@@ -16,7 +18,6 @@ export default function Register() {
     telefono: '',
   });
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
@@ -31,15 +32,15 @@ export default function Register() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
     const validationError = validate();
-    if (validationError) { setError(validationError); return; }
+    if (validationError) { showToast(validationError, 'warning'); return; }
     setLoading(true);
     try {
       await register(form.nombre.trim(), form.apellido.trim(), form.email, form.password, form.telefono.trim() || undefined);
+      showToast('¡Cuenta creada correctamente!', 'success');
       navigate('/dashboard', { replace: true });
     } catch (err) {
-      setError(err.response?.data?.message || 'No se pudo crear la cuenta. Intenta de nuevo.');
+      showToast(err.response?.data?.message || 'No se pudo crear la cuenta. Intenta de nuevo.', 'error');
     } finally {
       setLoading(false);
     }
@@ -100,13 +101,6 @@ export default function Register() {
               <h2 className="text-2xl sm:text-3xl font-bold text-white mb-1">Crear cuenta</h2>
               <p className="text-gray-400 text-sm">Completa los datos para registrarte</p>
             </div>
-
-            {error && (
-              <div className="mb-5 flex items-start gap-2.5 px-4 py-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm">
-                <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
-                <span>{error}</span>
-              </div>
-            )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Nombre + Apellido */}

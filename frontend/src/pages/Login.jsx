@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { MapPin, Users, BarChart2, Bell, AlertTriangle } from 'lucide-react';
+import { useToast } from '../context/ToastContext';
+import { MapPin, Users, BarChart2, Bell } from 'lucide-react';
 
 const features = [
   { Icon: MapPin,   text: 'Geolocalización precisa' },
@@ -12,26 +13,26 @@ const features = [
 
 export default function Login() {
   const { login } = useAuth();
+  const { showToast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
   const from = location.state?.from || '/dashboard';
 
   const [form, setForm] = useState({ email: '', password: '' });
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
     setLoading(true);
     try {
-      await login(form.email, form.password);
+      const userData = await login(form.email, form.password);
+      showToast(`Bienvenido, ${userData.nombre}`, 'success');
       navigate(from, { replace: true });
     } catch (err) {
-      setError(err.response?.data?.message || 'Correo o contraseña incorrectos.');
+      showToast(err.response?.data?.message || 'Correo o contraseña incorrectos.', 'error');
     } finally {
       setLoading(false);
     }
@@ -80,12 +81,7 @@ export default function Login() {
               <p className="text-gray-400 text-sm">Ingresa tus credenciales para continuar</p>
             </div>
 
-            {error && (
-              <div className="mb-5 flex items-start gap-2.5 px-4 py-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm">
-                <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
-                <span>{error}</span>
-              </div>
-            )}
+            {/* Eliminado: error inline — ahora usa toast */}
 
             <form onSubmit={handleSubmit} className="space-y-5">
               {/* Email */}
