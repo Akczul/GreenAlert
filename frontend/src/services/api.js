@@ -32,9 +32,13 @@ export const checkHealth = () => api.get('/health');
 export const loginUser    = (email, password)                                   => api.post('/auth/login',    { email, password });
 export const registerUser = (nombre, apellido, email, password, telefono)       => api.post('/auth/register', { nombre, apellido, email, password, telefono });
 
+// ── Categorías ──
+export const getCategorias         = ()       => api.get('/categorias');
+export const getCategoriaPorCodigo = (codigo) => api.get(`/categorias/${codigo}`);
+
 // ── Reportes ──
 export const getStats       = ()           => api.get('/reportes/stats');
-export const createReporte  = (data)       => api.post('/reportes', data);
+export const createReporte  = (data) => api.post('/reportes', data);
 export const getReportes    = (params)     => api.get('/reportes', { params });
 export const getReporteById = (id)         => api.get(`/reportes/${id}`);
 export const updateReporte  = (id, data)   => api.patch(`/reportes/${id}`, data);

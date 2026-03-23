@@ -17,7 +17,7 @@
     @apply border border-green-500 text-green-400 hover:bg-green-500/10 font-medium px-5 py-2.5 rounded-lg transition-all duration-200 active:scale-95;
   }
   .card {
-    @apply bg-gray-900 border border-gray-800 rounded-xl p-5;
+    @apply bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-6 lg:p-8;
   }
   .badge {
     @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium;
