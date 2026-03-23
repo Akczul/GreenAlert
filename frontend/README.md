@@ -36,11 +36,12 @@ Configurado en `vite.config.js`.
 ```
 frontend/
   src/
-    components/   # Componentes reutilizables
-    context/      # Estado global (AuthContext)
+    components/   # Componentes reutilizables (formulario, mapa, toasts)
+    constants/    # Enumeraciones y configuración de categorías
+    context/      # Estado global (AuthContext, ToastContext)
     pages/        # Vistas por ruta
     services/     # Axios y llamadas HTTP
-    App.jsx       # Rutas principales
+    App.jsx       # Rutas y providers principales
     main.jsx      # Punto de entrada
 ```
 
@@ -50,6 +51,15 @@ frontend/
 - El token y usuario se guardan en `localStorage` (`ga_token` y `ga_user`).
 - `ProtectedRoute` protege vistas privadas.
 - Axios agrega `Authorization: Bearer <token>` automaticamente.
+
+## Notificaciones toast
+
+- Sistema centralizado en `ToastContext` (proveedor global en `App.jsx`).
+- Uso: `const { showToast } = useToast()` → `showToast(mensaje, tipo, duracion)`.
+- Tipos disponibles: `success`, `error`, `warning`, `info`.
+- Duración por defecto: 3000 ms. Se puede personalizar por llamada.
+- Animaciones con `motion` (spring physics): deslizamiento desde la derecha y barra de progreso.
+- Componente visual: `ToastContainer` (se monta en `App.jsx`, esquina inferior derecha).
 
 ## Flujo basico de uso
 
