@@ -42,8 +42,10 @@ export const ReporteModel = {
               r.titulo, r.descripcion,
               r.latitud, r.longitud, r.direccion, r.municipio, r.departamento,
               r.votos_relevancia, r.vistas,
-              r.created_at, r.updated_at
+              r.created_at, r.updated_at,
+              u.nombre AS autor_nombre, u.apellido AS autor_apellido, u.rol AS autor_rol
        FROM reportes r
+       LEFT JOIN usuarios u ON u.id_usuario = r.id_usuario
        WHERE ${where}
        ORDER BY r.created_at DESC
        LIMIT ${safeLimit} OFFSET ${safeOffset}`,

@@ -1,7 +1,8 @@
 ﻿import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Droplets, Trees, Flame, Wind, Trash2, Leaf, Search, Lightbulb } from 'lucide-react';
+import { Droplets, Trees, Flame, Wind, Trash2, Leaf, Search, Lightbulb, AlertTriangle, Waves, ChevronLeft, ChevronRight, CalendarDays, User } from 'lucide-react';
 import { getReportes } from '../services/api';
+import { helpers } from '../constants/categorias';
 
 const statusClass = {
   pendiente:   'bg-gray-500/15 text-gray-400 border border-gray-500/30',
@@ -27,22 +28,46 @@ const severityClass = {
 const severityLabel = { bajo: 'Baja', medio: 'Media', alto: 'Alta', critico: 'Crítico' };
 
 const typeIcons = {
-  agua:      Droplets,
-  aire:      Wind,
-  suelo:     Trees,
-  ruido:     Flame,
-  residuos:  Trash2,
-  luminica:  Lightbulb,
-  otro:      Leaf,
+  agua:                         Droplets,
+  aire:                         Wind,
+  suelo:                        Trees,
+  ruido:                        Flame,
+  residuos:                     Trash2,
+  luminica:                     Lightbulb,
+  deforestacion:                Trees,
+  incendios_forestales:         Flame,
+  deslizamientos:               AlertTriangle,
+  avalanchas_fluviotorrenciales: Waves,
+  otro:                         Leaf,
 };
 
-const typeLabel = {
-  agua: 'Agua', aire: 'Aire', suelo: 'Suelo', ruido: 'Ruido',
-  residuos: 'Residuos', luminica: 'Lumínica', otro: 'Otro',
-};
+const TYPES_RIESGO       = ['deforestacion', 'incendios_forestales', 'deslizamientos', 'avalanchas_fluviotorrenciales'];
+const TYPES_CONTAMINACION = ['agua', 'aire', 'suelo', 'ruido', 'residuos', 'luminica'];
+const ALL_TYPES           = [...TYPES_RIESGO, ...TYPES_CONTAMINACION, 'otro'];
 
-const TYPES    = ['Todos', 'agua', 'aire', 'suelo', 'ruido', 'residuos', 'luminica', 'otro'];
 const STATUSES = ['Todos', 'pendiente', 'en_revision', 'verificado', 'en_proceso', 'resuelto', 'rechazado'];
+
+const GRUPOS = [
+  { value: 'Todos',         label: 'Todas las categorías' },
+  { value: 'riesgo',        label: '⚠ Riesgo Natural' },
+  { value: 'contaminacion', label: '☁ Contaminación' },
+];
+
+const PAGE_SIZE = 20;
+
+function getTypeLabel(tipo) {
+  return helpers.obtenerConfig(tipo)?.nombre ?? tipo;
+}
+
+function getCategoryColor(tipo) {
+  return helpers.obtenerConfig(tipo)?.color ?? '#6B7280';
+}
+
+function typesForGroup(group) {
+  if (group === 'riesgo')        return TYPES_RIESGO;
+  if (group === 'contaminacion') return TYPES_CONTAMINACION;
+  return ALL_TYPES;
+}
 
 export default function Reports() {
   const navigate = useNavigate();
@@ -50,8 +75,10 @@ export default function Reports() {
   const [loading, setLoading]          = useState(true);
   const [error, setError]              = useState('');
   const [search,       setSearch]      = useState('');
+  const [groupFilter,  setGroupFilter] = useState('Todos');
   const [typeFilter,   setTypeFilter]  = useState('Todos');
   const [statusFilter, setStatusFilter]= useState('Todos');
+  const [page,         setPage]        = useState(1);
 
   useEffect(() => {
     const fetchReports = async () => {
@@ -72,13 +99,31 @@ export default function Reports() {
     fetchReports();
   }, [typeFilter, statusFilter]);
 
+  // When group changes, reset type filter if it no longer belongs to the group
+  useEffect(() => {
+    if (groupFilter !== 'Todos' && typeFilter !== 'Todos') {
+      if (!typesForGroup(groupFilter).includes(typeFilter)) setTypeFilter('Todos');
+    }
+  }, [groupFilter]);
+
+  // Reset page when filters/search change
+  useEffect(() => { setPage(1); }, [search, groupFilter, typeFilter, statusFilter]);
+
   const filtered = reports.filter((r) => {
-    if (!search) return true;
-    const q = search.toLowerCase();
-    return r.titulo?.toLowerCase().includes(q) ||
-           r.direccion?.toLowerCase().includes(q) ||
-           r.municipio?.toLowerCase().includes(q);
+    if (groupFilter !== 'Todos' && helpers.obtenerGrupo(r.tipo_contaminacion) !== groupFilter) return false;
+    if (search) {
+      const q = search.toLowerCase();
+      if (
+        !r.titulo?.toLowerCase().includes(q) &&
+        !r.direccion?.toLowerCase().includes(q) &&
+        !r.municipio?.toLowerCase().includes(q)
+      ) return false;
+    }
+    return true;
   });
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const paginated  = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   const noData    = !loading && reports.length === 0 && !error;
   const noResults = !loading && reports.length > 0 && filtered.length === 0;
@@ -88,9 +133,13 @@ export default function Reports() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-white">Reportes Ambientales</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white">Reportes de Riesgo y Contaminación</h1>
           <p className="text-gray-400 mt-1 text-sm">
-            {loading ? 'Cargando...' : noData ? 'Sin reportes aún' : `${filtered.length} reportes encontrados`}
+            {loading
+              ? 'Cargando...'
+              : noData
+                ? 'Sin reportes aún'
+                : `${filtered.length} reporte${filtered.length !== 1 ? 's' : ''} encontrado${filtered.length !== 1 ? 's' : ''}`}
           </p>
         </div>
         <Link to="/reports/new" className="btn-primary text-sm self-start sm:self-auto">
@@ -100,29 +149,51 @@ export default function Reports() {
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3 mb-6">
-        <input
-          type="text"
-          placeholder="Buscar por título, dirección o municipio..."
-          className="flex-1 bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:border-green-500 transition-colors"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          disabled={loading || noData}
-        />
+        {/* Search */}
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
+          <input
+            type="text"
+            placeholder="Buscar por título, dirección o municipio..."
+            className="w-full bg-gray-900 border border-gray-700 rounded-lg pl-9 pr-4 py-2.5 text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:border-green-500 transition-colors"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            disabled={loading || noData}
+          />
+        </div>
+        {/* Group */}
+        <select
+          className="bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-sm text-gray-300 focus:outline-none focus:border-green-500 transition-colors disabled:opacity-40"
+          value={groupFilter}
+          onChange={(e) => setGroupFilter(e.target.value)}
+          disabled={loading}
+        >
+          {GRUPOS.map((g) => (
+            <option key={g.value} value={g.value}>{g.label}</option>
+          ))}
+        </select>
+        {/* Type — scoped to selected group */}
         <select
           className="bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-sm text-gray-300 focus:outline-none focus:border-green-500 transition-colors disabled:opacity-40"
           value={typeFilter}
           onChange={(e) => setTypeFilter(e.target.value)}
           disabled={loading}
         >
-          {TYPES.map((t) => <option key={t} value={t}>{t === 'Todos' ? 'Todos los tipos' : typeLabel[t]}</option>)}
+          <option value="Todos">Todos los tipos</option>
+          {typesForGroup(groupFilter).map((t) => (
+            <option key={t} value={t}>{getTypeLabel(t)}</option>
+          ))}
         </select>
+        {/* Status */}
         <select
           className="bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-sm text-gray-300 focus:outline-none focus:border-green-500 transition-colors disabled:opacity-40"
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
           disabled={loading}
         >
-          {STATUSES.map((s) => <option key={s} value={s}>{s === 'Todos' ? 'Todos los estados' : statusLabel[s]}</option>)}
+          {STATUSES.map((s) => (
+            <option key={s} value={s}>{s === 'Todos' ? 'Todos los estados' : statusLabel[s]}</option>
+          ))}
         </select>
       </div>
 
@@ -161,7 +232,7 @@ export default function Reports() {
           </div>
           <p className="font-medium">No se encontraron reportes con esos filtros.</p>
           <button
-            onClick={() => { setSearch(''); setTypeFilter('Todos'); setStatusFilter('Todos'); }}
+            onClick={() => { setSearch(''); setGroupFilter('Todos'); setTypeFilter('Todos'); setStatusFilter('Todos'); }}
             className="text-sm text-green-400 hover:underline mt-2"
           >
             Limpiar filtros
@@ -171,38 +242,126 @@ export default function Reports() {
 
       {/* Grid de reportes */}
       {!loading && !error && !noData && !noResults && (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filtered.map((r) => {
-            const Icon = typeIcons[r.tipo_contaminacion] ?? Leaf;
-            return (
-              <div
-                key={r.id_reporte}
-                onClick={() => navigate(`/reports/${r.id_reporte}`)}
-                className="card hover:border-green-700 transition-colors cursor-pointer group flex flex-col gap-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-400 flex items-center gap-1.5">
-                    <Icon className="w-4 h-4" />
-                    {typeLabel[r.tipo_contaminacion] ?? r.tipo_contaminacion}
-                  </span>
-                  <span className={`badge ${severityClass[r.nivel_severidad]}`}>{severityLabel[r.nivel_severidad] ?? r.nivel_severidad}</span>
+        <>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {paginated.map((r) => {
+              const Icon  = typeIcons[r.tipo_contaminacion] ?? Leaf;
+              const color = getCategoryColor(r.tipo_contaminacion);
+              const lugar = [r.municipio, r.departamento].filter(Boolean).join(', ') || r.direccion || '—';
+              const fecha = r.created_at
+                ? new Date(r.created_at).toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' })
+                : null;
+              return (
+                <div
+                  key={r.id_reporte}
+                  onClick={() => navigate(`/reports/${r.id_reporte}`)}
+                  className="card hover:border-green-700 transition-colors cursor-pointer group flex flex-col gap-3"
+                >
+                  {/* Tipo + Severidad */}
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm flex items-center gap-1.5" style={{ color }}>
+                      <Icon className="w-4 h-4 shrink-0" />
+                      {getTypeLabel(r.tipo_contaminacion)}
+                    </span>
+                    <span className={`badge ${severityClass[r.nivel_severidad]}`}>
+                      {severityLabel[r.nivel_severidad] ?? r.nivel_severidad}
+                    </span>
+                  </div>
+
+                  {/* Título */}
+                  <h3 className="font-semibold text-white group-hover:text-green-400 transition-colors leading-snug">
+                    {r.titulo}
+                  </h3>
+
+                  {/* Descripción */}
+                  {r.descripcion && (
+                    <p className="text-sm text-gray-400 leading-relaxed line-clamp-2">{r.descripcion}</p>
+                  )}
+
+                  {/* Ubicación */}
+                  <div className="flex items-center gap-1.5 text-xs text-gray-500 mt-auto pt-2 border-t border-gray-800">
+                    <span>📍</span>
+                    <span className="truncate">{lugar}</span>
+                  </div>
+
+                  {/* Estado + Fecha */}
+                  <div className="flex items-center justify-between text-xs text-gray-500">
+                    <span className={`badge ${statusClass[r.estado]}`}>{statusLabel[r.estado] ?? r.estado}</span>
+                    {fecha && (
+                      <span className="flex items-center gap-1 text-gray-600">
+                        <CalendarDays size={11} />
+                        {fecha}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Autor */}
+                  {(r.autor_nombre || r.autor_apellido) && (
+                    <div className="flex items-center gap-1 text-xs text-gray-600 pt-1">
+                      <User size={11} className="shrink-0" />
+                      <span className="truncate">{[r.autor_nombre, r.autor_apellido].filter(Boolean).join(' ')}</span>
+                    </div>
+                  )}
                 </div>
-                <h3 className="font-semibold text-white group-hover:text-green-400 transition-colors leading-snug">
-                  {r.titulo}
-                </h3>
-                {r.descripcion && (
-                  <p className="text-sm text-gray-400 leading-relaxed line-clamp-2">{r.descripcion}</p>
-                )}
-                <div className="flex items-center gap-2 text-xs text-gray-500 mt-auto pt-2 border-t border-gray-800">
-                  <span>📍 {[r.municipio, r.departamento].filter(Boolean).join(', ') || r.direccion}</span>
+              );
+            })}
+          </div>
+
+          {/* Paginación */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between mt-8 gap-4">
+              <p className="text-xs text-gray-500">
+                Página <span className="text-gray-300 font-medium">{page}</span> de <span className="text-gray-300 font-medium">{totalPages}</span>
+                {' '}· mostrando {Math.min(PAGE_SIZE, filtered.length - (page - 1) * PAGE_SIZE)} de {filtered.length}
+              </p>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                  className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm border border-gray-700 text-gray-300 hover:border-green-600 hover:text-green-400 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                >
+                  <ChevronLeft size={14} /> Anterior
+                </button>
+
+                {/* Números de página */}
+                <div className="hidden sm:flex items-center gap-1">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1)
+                    .filter((n) => n === 1 || n === totalPages || Math.abs(n - page) <= 1)
+                    .reduce((acc, n, idx, arr) => {
+                      if (idx > 0 && arr[idx - 1] !== n - 1) acc.push('…');
+                      acc.push(n);
+                      return acc;
+                    }, [])
+                    .map((item, idx) =>
+                      item === '…' ? (
+                        <span key={`ellipsis-${idx}`} className="px-1 text-gray-600 text-sm select-none">…</span>
+                      ) : (
+                        <button
+                          key={item}
+                          onClick={() => setPage(item)}
+                          className={`w-8 h-8 rounded-lg text-sm font-medium transition-colors ${
+                            page === item
+                              ? 'bg-green-600 text-white'
+                              : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+                          }`}
+                        >
+                          {item}
+                        </button>
+                      )
+                    )}
                 </div>
-                <div className="flex items-center justify-between text-xs text-gray-500">
-                  <span className={`badge ${statusClass[r.estado]}`}>{statusLabel[r.estado] ?? r.estado}</span>
-                  <span>👍 {r.votos_relevancia ?? 0}</span>
-                </div>
+
+                <button
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={page === totalPages}
+                  className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm border border-gray-700 text-gray-300 hover:border-green-600 hover:text-green-400 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                >
+                  Siguiente <ChevronRight size={14} />
+                </button>
               </div>
-            );
-          })}
-        </div>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

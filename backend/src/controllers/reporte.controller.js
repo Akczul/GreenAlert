@@ -1,4 +1,6 @@
-import { ReporteModel } from '../models/reporte.model.js';
+import { ReporteModel }   from '../models/reporte.model.js';
+import { UsuarioModel }   from '../models/usuario.model.js';
+import { EvidenciaModel } from '../models/evidencia.model.js';
 import { errorResponse, successResponse } from '../utils/response.js';
 
 const parseCoord = (val) => {
@@ -50,6 +52,21 @@ export const createReporte = async (req, res, next) => {
     });
 
     const reporte = await ReporteModel.findById(idReporte);
+
+    // Guardar evidencia si se adjuntó archivo
+    if (req.file) {
+      const tipo = req.file.mimetype.startsWith('video/') ? 'video' : 'imagen';
+      await EvidenciaModel.create({
+        id_reporte:      idReporte,
+        id_usuario:      req.user.sub,
+        tipo_archivo:    tipo,
+        url_archivo:     `/uploads/${req.file.filename}`,
+        nombre_original: req.file.originalname,
+        mime_type:       req.file.mimetype,
+        tamano_bytes:    req.file.size,
+        orden:           0,
+      });
+    }
 
     return successResponse(res, { reporte }, 'Reporte creado correctamente.', 201);
   } catch (error) {
@@ -145,7 +162,19 @@ export const getReporteById = async (req, res, next) => {
     const reporte = await ReporteModel.findById(id);
     if (!reporte) return errorResponse(res, 'Reporte no encontrado.', 404);
     await ReporteModel.incrementarVistas(id);
-    return successResponse(res, { reporte });
+
+    // Fetch related data in parallel
+    const [evidencias, usuario] = await Promise.all([
+      EvidenciaModel.findByReporte(id),
+      UsuarioModel.findById(reporte.id_usuario),
+    ]);
+
+    // Strip sensitive user fields
+    const autor = usuario
+      ? { nombre: usuario.nombre, apellido: usuario.apellido, rol: usuario.rol, avatar_url: usuario.avatar_url ?? null }
+      : null;
+
+    return successResponse(res, { reporte, evidencias, autor });
   } catch (error) {
     return next(error);
   }

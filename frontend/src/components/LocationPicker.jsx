@@ -69,7 +69,7 @@ export default function LocationPicker({ latitud, longitud, onChange }) {
           ? `Seleccionado: ${position.lat.toFixed(5)}, ${position.lng.toFixed(5)}`
           : 'Haz clic en el mapa para fijar la ubicación exacta'}
       </p>
-      <div style={{ height: '360px', borderRadius: '0.75rem', overflow: 'hidden' }}>
+      <div className="h-56 sm:h-80 lg:h-[420px]" style={{ borderRadius: '0.75rem', overflow: 'hidden' }}>
         <MapContainer
           center={[4.5709, -74.2973]}
           zoom={6}

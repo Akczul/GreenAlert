@@ -2,18 +2,18 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Droplets, Trees, Flame, Wind, Trash2, Leaf, Lightbulb,
-  ArrowLeft, MapPin, Calendar, ThumbsUp, Eye,
+  AlertTriangle, Waves, ArrowLeft, MapPin, Calendar, Eye,
+  User, ShieldCheck, ImageOff,
 } from 'lucide-react';
 import { getReporteById } from '../services/api';
+import { helpers } from '../constants/categorias';
 
 const typeIcons = {
   agua: Droplets, aire: Wind, suelo: Trees,
-  ruido: Flame, residuos: Trash2, luminica: Lightbulb, otro: Leaf,
-};
-const typeLabel = {
-  agua: 'Contaminación de agua', aire: 'Contaminación del aire',
-  suelo: 'Contaminación del suelo', ruido: 'Contaminación sonora',
-  residuos: 'Residuos sólidos', luminica: 'Contaminación lumínica', otro: 'Otra',
+  ruido: Flame, residuos: Trash2, luminica: Lightbulb,
+  deforestacion: Trees, incendios_forestales: Flame,
+  deslizamientos: AlertTriangle, avalanchas_fluviotorrenciales: Waves,
+  otro: Leaf,
 };
 const statusClass = {
   pendiente:   'bg-gray-500/15 text-gray-400 border border-gray-500/30',
@@ -35,22 +35,55 @@ const severityClass = {
 };
 const severityLabel = { bajo: 'Baja', medio: 'Media', alto: 'Alta', critico: 'Crítico' };
 
+const rolLabel = {
+  ciudadano: 'Ciudadano', moderador: 'Moderador', admin: 'Administrador',
+};
+
 const formatDate = (iso) =>
   new Date(iso).toLocaleDateString('es-CO', {
     year: 'numeric', month: 'long', day: 'numeric',
     hour: '2-digit', minute: '2-digit',
   });
 
+function ImageCard({ ev }) {
+  const [err, setErr] = useState(false);
+  const isImage = ev.mime_type?.startsWith('image/') || ev.tipo_archivo === 'imagen';
+  if (!isImage) return null;
+  return (
+    <div className="relative aspect-video rounded-lg overflow-hidden bg-gray-800 border border-gray-700">
+      {err ? (
+        <div className="w-full h-full flex flex-col items-center justify-center gap-2 text-gray-600">
+          <ImageOff size={28} />
+          <span className="text-xs">{ev.nombre_original ?? 'Imagen'}</span>
+        </div>
+      ) : (
+        <img
+          src={ev.url_archivo}
+          alt={ev.nombre_original ?? 'Evidencia'}
+          className="w-full h-full object-cover"
+          onError={() => setErr(true)}
+        />
+      )}
+    </div>
+  );
+}
+
 export default function ReportDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [report, setReport] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [report,    setReport]    = useState(null);
+  const [autor,     setAutor]     = useState(null);
+  const [evidencias,setEvidencias]= useState([]);
+  const [loading,   setLoading]   = useState(true);
+  const [error,     setError]     = useState('');
 
   useEffect(() => {
     getReporteById(id)
-      .then(({ data }) => setReport(data.data.reporte))
+      .then(({ data }) => {
+        setReport(data.data.reporte);
+        setAutor(data.data.autor ?? null);
+        setEvidencias(data.data.evidencias ?? []);
+      })
       .catch(() => setError('No se pudo cargar el reporte.'))
       .finally(() => setLoading(false));
   }, [id]);
@@ -75,8 +108,14 @@ export default function ReportDetail() {
     );
   }
 
-  const Icon = typeIcons[report.tipo_contaminacion] ?? Leaf;
+  const cfg      = helpers.obtenerConfig(report.tipo_contaminacion);
+  const catColor = cfg?.color ?? '#6B7280';
+  const catNombre= cfg?.nombre ?? report.tipo_contaminacion;
+  const Icon     = typeIcons[report.tipo_contaminacion] ?? Leaf;
   const location = [report.municipio, report.departamento].filter(Boolean).join(', ') || report.direccion;
+  const imageEvidencias = evidencias.filter(
+    (e) => e.mime_type?.startsWith('image/') || e.tipo_archivo === 'imagen'
+  );
 
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10">
@@ -90,13 +129,13 @@ export default function ReportDetail() {
       </button>
 
       <div className="card flex flex-col gap-6">
-        {/* Header */}
+        {/* Header: category + badges */}
         <div className="flex flex-wrap items-start justify-between gap-3">
-          <div className="flex items-center gap-2 text-gray-400 text-sm">
-            <Icon className="w-5 h-5 text-green-400" />
-            <span>{typeLabel[report.tipo_contaminacion] ?? report.tipo_contaminacion}</span>
+          <div className="flex items-center gap-2 text-sm font-medium" style={{ color: catColor }}>
+            <Icon className="w-5 h-5 shrink-0" />
+            <span>{catNombre}</span>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <span className={`badge ${severityClass[report.nivel_severidad]}`}>
               {severityLabel[report.nivel_severidad] ?? report.nivel_severidad}
             </span>
@@ -107,19 +146,33 @@ export default function ReportDetail() {
         </div>
 
         {/* Title */}
-        <div>
-          <h1 className="text-2xl font-bold text-white leading-snug">{report.titulo}</h1>
-        </div>
+        <h1 className="text-2xl sm:text-3xl font-bold text-white leading-snug">{report.titulo}</h1>
 
         {/* Description */}
         {report.descripcion && (
           <p className="text-gray-300 leading-relaxed">{report.descripcion}</p>
         )}
 
-        {/* Meta info grid */}
+        {/* Evidencias / images */}
+        {imageEvidencias.length > 0 && (
+          <div>
+            <p className="text-xs text-gray-500 font-medium uppercase tracking-wide mb-3">
+              Evidencias ({imageEvidencias.length})
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {imageEvidencias.map((ev) => (
+                <ImageCard key={ev.id_evidencia} ev={ev} />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Meta grid */}
         <div className="grid sm:grid-cols-2 gap-4 pt-4 border-t border-gray-800 text-sm">
+
+          {/* Location */}
           {location && (
-            <div className="flex items-start gap-2 text-gray-400">
+            <div className="flex items-start gap-2">
               <MapPin className="w-4 h-4 mt-0.5 text-green-400 shrink-0" />
               <div>
                 <p className="text-gray-500 text-xs mb-0.5">Ubicación</p>
@@ -131,8 +184,9 @@ export default function ReportDetail() {
             </div>
           )}
 
+          {/* Coordinates */}
           {report.latitud && report.longitud && (
-            <div className="flex items-start gap-2 text-gray-400">
+            <div className="flex items-start gap-2">
               <MapPin className="w-4 h-4 mt-0.5 text-gray-600 shrink-0" />
               <div>
                 <p className="text-gray-500 text-xs mb-0.5">Coordenadas</p>
@@ -143,7 +197,8 @@ export default function ReportDetail() {
             </div>
           )}
 
-          <div className="flex items-start gap-2 text-gray-400">
+          {/* Date */}
+          <div className="flex items-start gap-2">
             <Calendar className="w-4 h-4 mt-0.5 text-green-400 shrink-0" />
             <div>
               <p className="text-gray-500 text-xs mb-0.5">Registrado</p>
@@ -151,19 +206,35 @@ export default function ReportDetail() {
             </div>
           </div>
 
-          <div className="flex items-center gap-4 text-gray-400">
-            <div className="flex items-center gap-1.5">
-              <ThumbsUp className="w-4 h-4 text-green-400" />
-              <span className="text-gray-200 font-semibold">{report.votos_relevancia ?? 0}</span>
-              <span className="text-xs text-gray-500">votos</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <Eye className="w-4 h-4 text-gray-500" />
-              <span className="text-gray-400">{report.vistas ?? 0}</span>
-              <span className="text-xs text-gray-500">vistas</span>
-            </div>
+          {/* Views */}
+          <div className="flex items-center gap-1.5 text-gray-400">
+            <Eye className="w-4 h-4 text-gray-500" />
+            <span className="text-gray-300">{report.vistas ?? 0}</span>
+            <span className="text-xs text-gray-500">vistas</span>
           </div>
         </div>
+
+        {/* Autor */}
+        {autor && (
+          <div className="flex items-center gap-3 pt-4 border-t border-gray-800">
+            <div className="w-9 h-9 rounded-full bg-green-500/15 border border-green-500/30 flex items-center justify-center overflow-hidden shrink-0">
+              {autor.avatar_url
+                ? <img src={autor.avatar_url} alt={autor.nombre} className="w-full h-full object-cover" />
+                : <User className="w-4 h-4 text-green-400" />}
+            </div>
+            <div>
+              <p className="text-sm text-gray-200 font-medium">
+                {autor.nombre} {autor.apellido}
+              </p>
+              <p className="text-xs text-gray-500 flex items-center gap-1">
+                {(autor.rol === 'moderador' || autor.rol === 'admin') && (
+                  <ShieldCheck className="w-3 h-3 text-blue-400" />
+                )}
+                {rolLabel[autor.rol] ?? autor.rol}
+              </p>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
