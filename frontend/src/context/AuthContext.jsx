@@ -1,11 +1,13 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { loginUser, registerUser } from '../services/api';
+import { useToast } from './ToastContext';
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const { showToast } = useToast();
 
   useEffect(() => {
     const token = localStorage.getItem('ga_token');
@@ -43,6 +45,7 @@ export function AuthProvider({ children }) {
     localStorage.removeItem('ga_token');
     localStorage.removeItem('ga_user');
     setUser(null);
+    showToast('Sesión cerrada', 'info');
   };
 
   return (
