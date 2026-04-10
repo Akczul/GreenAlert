@@ -161,9 +161,7 @@ export const getReporteById = async (req, res, next) => {
     const id = Number(req.params.id);
     const reporte = await ReporteModel.findById(id);
     if (!reporte) return errorResponse(res, 'Reporte no encontrado.', 404);
-    if (req.query.skip_view !== 'true') {
-      await ReporteModel.incrementarVistas(id);
-    }
+    await ReporteModel.incrementarVistas(id);
 
     // Fetch related data in parallel
     const [evidencias, usuario] = await Promise.all([

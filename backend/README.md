@@ -1,53 +1,422 @@
-# GreenAlert - Backend
+# GreenAlert - Backend API
 
-API REST de GreenAlert, construida con Node.js + Express + MySQL.
+API REST para la plataforma de monitoreo ambiental ciudadano GreenAlert. Construida con Node.js, Express y MySQL.
 
-## 📦 Versión Actual
+---
 
-**v2.0** - Incluye 4 nuevas categorías de riesgo ambiental
+## 📋 Tabla de Contenidos
 
-## Requisitos
+- [Stack Tecnológico](#stack-tecnológico)
+- [Requisitos Previos](#requisitos-previos)
+- [Instalación](#instalación)
+- [Configuración](#configuración)
+- [Ejecución](#ejecución)
+- [Scripts Disponibles](#scripts-disponibles)
+- [Estructura del Proyecto](#estructura-del-proyecto)
+- [Endpoints Disponibles](#endpoints-disponibles)
+- [Autenticación](#autenticación)
+- [Base de Datos](#base-de-datos)
+- [Testing](#testing)
+- [Deploy](#deploy)
 
-- Node.js 18 o superior
-- npm 9 o superior
-- MySQL en ejecucion
-- Base de datos creada (usar `DATABASE_COMPLETA.sql` en la raiz del proyecto)
+---
 
-## Variables de entorno
+## 🛠️ Stack Tecnológico
 
-Crea un archivo `.env` dentro de `backend/` con este contenido:
+| Componente | Tecnología |
+|-----------|-----------|
+| **Runtime** | Node.js 18+ (ES Modules) |
+| **Framework** | Express.js |
+| **Base de Datos** | MySQL 8.0+ |
+| **Driver MySQL** | mysql2/promise |
+| **Autenticación** | JWT (JSON Web Tokens) |
+| **Hash de Contraseña** | crypto (scrypt) |
+| **Variables de Entorno** | dotenv |
+| **Desarrollo** | Nodemon |
 
-```env
-PORT=3000
-DB_HOST=localhost
-DB_PORT=3306
-DB_USER=tu_usuario
-DB_PASSWORD=tu_password
-DB_NAME=green-alert
-JWT_SECRET=una_clave_secreta
+---
+
+## 📦 Requisitos Previos
+
+- **Node.js** 18.0.0 o superior ([descargar](https://nodejs.org/))
+- **npm** 9.0.0 o superior
+- **MySQL** 8.0 o superior ([descargar](https://www.mysql.com/downloads/))
+- **Git** para versionamiento
+
+### Verificar versiones instaladas:
+
+```bash
+node --version    # v18.0.0 o superior
+npm --version     # 9.0.0 o superior
+mysql --version   # Ver. 8.0 o superior
 ```
 
-## Instalacion y ejecucion
+---
+
+## 💾 Base de Datos
+
+### Crear la base de datos
+
+1. Abre tu cliente MySQL (MySQL Workbench, MySQL CLI, etc.)
+2. Ejecuta el script SQL disponible en la raíz del proyecto:
+
+```bash
+mysql -u tu_usuario -p tu_password < ../green-alert.sql
+```
+
+O importa manualmente el archivo `green-alert.sql` desde tu cliente MySQL.
+
+### Tablas principales
+
+- `usuarios` - Registros de usuarios
+- `reportes` - Reportes ambientales
+- `categorias_riesgo` - Tipos de contaminación
+- `evidencias` - Archivos adjuntos a reportes
+
+---
+
+## 🚀 Instalación
+
+1. **Clonar el repositorio** (o descargar el código):
+
+```bash
+git clone https://github.com/tu-usuario/greenalert-backend.git
+cd greenalert-backend
+```
+
+2. **Instalar dependencias**:
 
 ```bash
 npm install
+```
+
+3. **Crear archivo `.env`** en la raíz del proyecto:
+
+```bash
+cp .env.example .env
+```
+
+---
+
+## ⚙️ Configuración
+
+### Variables de Entorno (`.env`)
+
+Crea un archivo `.env` en la raíz de la carpeta `backend/` con las siguientes variables:
+
+```env
+# Servidor
+PORT=3000
+NODE_ENV=development
+
+# Base de Datos
+DB_HOST=localhost
+DB_PORT=3306
+DB_USER=root
+DB_PASSWORD=tu_password
+DB_NAME=green_alert
+
+# Autenticación
+JWT_SECRET=tu_clave_secreta_muy_segura_aqui_12345678
+JWT_EXPIRES_IN=7d
+
+# Archivos
+UPLOAD_DIR=./uploads
+MAX_FILE_SIZE=10485760
+
+# Email (opcional para futuro)
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=tu_email@gmail.com
+SMTP_PASS=tu_app_password
+```
+
+### `.env.example`
+
+Se incluye archivo `env.example` con variables requeridas como referencia.
+
+---
+
+## ▶️ Ejecución
+
+### Desarrollo (con hot-reload)
+
+```bash
 npm run dev
 ```
 
-Servidor disponible en http://localhost:3000.
+El servidor iniciará en `http://localhost:3000`
 
-## Scripts
+### Producción
 
-- `npm run dev`: inicia el servidor con nodemon
-- `npm start`: inicia el servidor con node
+```bash
+npm start
+```
 
-## 🆕 Cambios Recientes (v2.0)
+---
 
-### 4 Nuevas Categorías de Riesgo Ambiental
+## 📝 Scripts Disponibles
 
-Se agregaron 4 nuevas categorías para reportar problemas ambientales críticos:
+```bash
+npm run dev          # Inicia servidor con nodemon (desarrollo)
+npm start            # Inicia servidor con node (producción)
+npm run test         # Ejecuta pruebas (si existen)
+npm run lint         # Verifica código (si está configurado)
+```
 
-| Categoría | Código | Severidad | Descripción |
+---
+
+## 📁 Estructura del Proyecto
+
+```
+backend/
+├── .env                          # Variables de entorno (NO commitear)
+├── .env.example                  # Plantilla de variables
+├── .gitignore                    # Archivos a ignorar en git
+├── node_modules/                 # Dependencias instaladas
+├── package.json                  # Definición de proyecto y dependencias
+├── package-lock.json             # Lock de versiones
+├── README.md                     # Este archivo
+│
+├── src/
+│   ├── app.js                    # Configuración de Express
+│   ├── server.js                 # Punto de entrada
+│   │
+│   ├── config/
+│   │   └── database.js           # Pool de conexiones MySQL
+│   │
+│   ├── controllers/              # Lógica de negocio
+│   │   ├── auth.controller.js
+│   │   ├── reporte.controller.js
+│   │   ├── categoria-riesgo.controller.js
+│   │   ├── health.controller.js
+│   │   └── usuario.controller.js
+│   │
+│   ├── models/                   # Acceso a datos
+│   │   ├── usuario.model.js
+│   │   ├── reporte.model.js
+│   │   ├── evidencia.model.js
+│   │   ├── categoria-riesgo.model.js
+│   │   └── notificacion.model.js
+│   │
+│   ├── services/                 # Servicios reutilizables
+│   │   ├── email.service.js      # Envío de emails
+│   │   └── ia.service.js         # Integración con IA
+│   │
+│   └── utils/
+│       └── response.js           # Formato de respuestas
+│
+├── middlewares/                  # Middleware de Express
+│   ├── auth.middleware.js        # Verificación de JWT
+│   ├── errorHandler.js           # Manejo de errores
+│   ├── upload.middleware.js      # Carga de files
+│   └── logger.middleware.js      # Logging
+│
+├── routes/                       # Definición de endpoints
+│   ├── auth.routes.js
+│   ├── reporte.routes.js
+│   ├── categoria-riesgo.routes.js
+│   ├── usuario.routes.js
+│   └── health.routes.js
+│
+├── uploads/                      # Archivos subidos (gitignored)
+│
+└── docs/                         # Documentación
+    ├── CONSTANTES_VALIDACION.js
+    └── ENDPOINTS_PERFIL.md
+```
+
+---
+
+## 🔌 Endpoints Disponibles
+
+### Autenticación (`/auth`)
+
+| Método | Ruta | Protegida | Descripción |
+|--------|------|-----------|-------------|
+| `POST` | `/auth/register` | ❌ | Registro de nuevo usuario |
+| `POST` | `/auth/login` | ❌ | Login de usuario |
+| `GET` | `/auth/perfil` | ✅ | Obtener perfil del usuario |
+| `PATCH` | `/auth/perfil` | ✅ | Actualizar perfil |
+| `PATCH` | `/auth/cambiar-contrasena` | ✅ | Cambiar contraseña |
+
+### Reportes (`/reportes`)
+
+| Método | Ruta | Protegida | Descripción |
+|--------|------|-----------|-------------|
+| `GET` | `/reportes` | ❌ | Listar todos los reportes |
+| `GET` | `/reportes/stats` | ❌ | Estadísticas generales |
+| `GET` | `/reportes/:id` | ❌ | Obtener detalle de reporte |
+| `POST` | `/reportes` | ✅ | Crear nuevo reporte |
+| `PATCH` | `/reportes/:id` | ✅ | Actualizar reporte |
+| `DELETE` | `/reportes/:id` | ✅ | Eliminar reporte |
+
+### Categorías (`/categorias`)
+
+| Método | Ruta | Protegida | Descripción |
+|--------|------|-----------|-------------|
+| `GET` | `/categorias` | ❌ | Listar todas las categorías |
+| `GET` | `/categorias/:codigo` | ❌ | Obtener detalle de categoría |
+| `GET` | `/categorias/:codigo/reportes` | ❌ | Reportes por categoría |
+| `GET` | `/categorias/estadisticas/resumen` | ❌ | Estadísticas por categoría |
+| `GET` | `/categorias/estadisticas/por-severidad` | ❌ | Estadísticas por severidad |
+
+### Health
+
+| Método | Ruta | Protegida | Descripción |
+|--------|------|-----------|-------------|
+| `GET` | `/health` | ❌ | Estado del servidor |
+
+---
+
+## 🔐 Autenticación
+
+### JWT Token
+
+Se utiliza **JWT (JSON Web Tokens)** para autenticación:
+
+1. Usuario se autentica con `POST /auth/login`
+2. Backend retorna un token JWT válido por 7 días
+3. Cliente incluye token en header: `Authorization: Bearer <token>`
+4. Servidor verifica token en cada request protegido
+
+### Headers Requeridos
+
+```bash
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
+### Middleware de Autenticación
+
+El middleware `verifyToken` valida JWT en rutas protegidas.
+
+---
+
+## 💾 Base de Datos
+
+### Conexión
+
+El archivo `src/config/database.js` configura un pool de conexiones para mejor performance.
+
+### Migrations
+
+No se usa herramienta de migrations. El schema se manage manualmente con `green-alert.sql`.
+
+### Backup
+
+Para hacer backup de la BD:
+
+```bash
+mysqldump -u usuario -p base_datos > backup.sql
+```
+
+---
+
+## 🧪 Testing
+
+Actualmente no hay suite de tests. Para futuro se sugiere usar:
+- **Jest** para unit tests
+- **Supertest** para tests de API
+- **Newman** para tests de Postman
+
+---
+
+## 🚁 Deploy
+
+### En Servidor Linux (DigitalOcean, Linode, etc.)
+
+1. Conectar a servidor por SSH
+2. Clonar repositorio
+3. Instalar Node.js
+4. Instalar MySQL
+5. Ejecutar `npm install`
+6. Configurar `.env`
+7. Usar **PM2** para gestionar proceso:
+
+```bash
+npm install -g pm2
+pm2 start src/server.js --name greenalert-api
+pm2 save
+pm2 startup
+```
+
+### Usando Docker
+
+Se sugiere crear `Dockerfile` y `docker-compose.yml` para deployment containerizado.
+
+---
+
+## 📚 Documentación Adicional
+
+- [Endpoints Detallados](./docs/ENDPOINTS_PERFIL.md)
+- [Constantes de Validación](./docs/CONSTANTES_VALIDACION.js)
+
+---
+
+## 🐛 Troubleshooting
+
+### Error: `Cannot find module 'express'`
+
+```bash
+npm install
+```
+
+### Error: `ER_HOST_NOT_KNOWN`
+
+Verifica que MySQL esté corriendo y que host/puerto en `.env` sean correctos.
+
+### Error: `ER_BAD_DB_ERROR`
+
+La base de datos no existe. Ejecuta:
+
+```bash
+mysql -u root -p < green-alert.sql
+```
+
+### Puerto 3000 ya en uso
+
+Cambia el puerto en `.env` o cierra la aplicación que lo usa:
+
+```bash
+# En Windows
+netstat -ano | findstr :3000
+
+# En Linux/Mac
+lsof -i :3000
+```
+
+---
+
+## 📧 Contacto y Soporte
+
+Para reportar bugs o sugerencias, abre un **Issue** en GitHub.
+
+---
+
+## 📄 Licencia
+
+Este proyecto es parte de un trabajo académico. Ver licencia en el repositorio principal.
+
+---
+
+## 🔄 Cambios Recientes
+
+### v2.0
+
+- ✅ Agregar 4 nuevas categorías de riesgo ambiental
+- ✅ Implementar endpoints de perfil de usuario
+- ✅ Mejorar manejo de errores
+
+### v1.0
+
+- ✅ Setup inicial del proyecto
+- ✅ Autenticación JWT
+- ✅ CRUD de reportes
+- ✅ Gestión de categorías
+
+---
+
+**Última actualización**: March 28, 2026
 |-----------|--------|-----------|-------------|
 | 🌲 Deforestación | `deforestacion` | Alto | Tala o pérdida de cobertura forestal |
 | 🔥 Incendios Forestales | `incendios_forestales` | Crítico | Fuegos descontrolados en bosques |
